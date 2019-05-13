@@ -16,7 +16,6 @@ AHallwayUnitActor::AHallwayUnitActor()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("<Mesh>"));
 	Mesh->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
-
 }
 
 // Called when the game starts or when spawned
@@ -24,8 +23,8 @@ void AHallwayUnitActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Based on 
-	Mesh->OnComponentHit.AddDynamic(this, &AHallwayUnitActor::OnHit);
+	// Based on https://forums.unrealengine.com/development-discussion/c-gameplay-programming/1377430-oncomponenthit-isn-t-working
+	Mesh->OnComponentBeginOverlap.AddDynamic(this, &AHallwayUnitActor::OnBeginOverlap);
 }
 
 // Called every frame
@@ -34,7 +33,8 @@ void AHallwayUnitActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AHallwayUnitActor::OnHit(UPrimitiveComponent* HitComp, AActor *OtherActor, UPrimitiveComponent *OtherComp, FVector NormalImpulse, const FHitResult &Hit)
+// Based on https://answers.unrealengine.com/questions/789940/begin-overlap-in-c.html
+void AHallwayUnitActor::OnBeginOverlap(UPrimitiveComponent *OverlappedComp, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Help"));
 	// Other Actor is the actor that triggered the event. Check that is not ourself.
