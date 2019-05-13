@@ -25,13 +25,13 @@ class AStarRunner2019Character : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UMotionControllerComponent *L_MotionController;
 
-  public:
+public:
 	AStarRunner2019Character();
 
-  protected:
+protected:
 	virtual void BeginPlay();
 
-  public:
+public:
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	float BaseTurnRate;
@@ -44,12 +44,14 @@ class AStarRunner2019Character : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	uint32 bUsingMotionControllers : 1;
 
-  protected:
+protected:
 	/** Handles moving forward/backward */
 	void MoveForward(float Val);
 
 	/** Handles stafing movement, left and right */
 	void MoveRight(float Val);
+
+	void Ass();
 
 	/**
 	 * Called via input to turn at a given rate.
@@ -80,7 +82,7 @@ class AStarRunner2019Character : public ACharacter
 	void TouchUpdate(const ETouchIndex::Type FingerIndex, const FVector Location);
 	TouchData TouchItem;
 
-  protected:
+protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent *InputComponent) override;
 	// End of APawn interface
@@ -93,8 +95,7 @@ class AStarRunner2019Character : public ACharacter
 	 */
 	bool EnableTouchscreenMovement(UInputComponent *InputComponent);
 
-  public:
-
+public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	FORCEINLINE class UCameraComponent *GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 };

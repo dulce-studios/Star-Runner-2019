@@ -1,6 +1,8 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "StarRunner2019Character.h"
+#include "HallwayUnitActor.h"
+#include "Engine/EngineBaseTypes.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -49,6 +51,7 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent *
 	// Bind movement events
 	PlayerInputComponent->BindAxis("MoveForward", this, &AStarRunner2019Character::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AStarRunner2019Character::MoveRight);
+	PlayerInputComponent->BindAction("Ass", EInputEvent::IE_Pressed, this, &AStarRunner2019Character::Ass);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
@@ -87,4 +90,17 @@ void AStarRunner2019Character::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void AStarRunner2019Character::Ass()
+{
+	// Get actor's current location
+
+	UE_LOG(LogTemp, Warning, TEXT("PLEASE"));
+
+	FVector NewLocation = GetActorLocation() + FVector(50.0f, 0.0f, 0.0f);
+	FRotator Rotation(0.0f, 0.0f, 0.0f);
+	FActorSpawnParameters SpawnInfo;
+
+	GetWorld()->SpawnActor<AHallwayUnitActor>(NewLocation, Rotation, SpawnInfo);
 }
