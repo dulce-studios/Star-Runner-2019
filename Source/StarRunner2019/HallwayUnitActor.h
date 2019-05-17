@@ -3,13 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
-#include "Components/PrimitiveComponent.h"
+#include "Engine/StaticMeshActor.h"
 
 #include "HallwayUnitActor.generated.h"
 
 UCLASS()
-class STARRUNNER2019_API AHallwayUnitActor : public AActor
+class STARRUNNER2019_API AHallwayUnitActor : public AStaticMeshActor
 {
 	GENERATED_BODY()
 
@@ -24,7 +23,4 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	UPROPERTY(EditAnywhere)
-	UStaticMeshComponent *MeshComponent;
 };

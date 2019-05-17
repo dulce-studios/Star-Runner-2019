@@ -11,15 +11,11 @@ AHallwayUnitActor::AHallwayUnitActor()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-
 	// // Based on https://forums.unrealengine.com/development-discussion/c-gameplay-programming/118457-set-static-mesh-in-c
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("StaticMesh'/Game/Geometry/Meshes/hallwayunit.hallwayunit'"));
 	UStaticMesh *StaticMesh = MeshAsset.Object;
 	
-	MeshComponent->SetStaticMesh(StaticMesh);
-	// Assign the static mesh component to root
-	RootComponent = MeshComponent;
+	GetStaticMeshComponent()->SetStaticMesh(StaticMesh);
 }
 
 // Called when the game starts or when spawned
