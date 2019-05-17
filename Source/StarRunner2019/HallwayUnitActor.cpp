@@ -1,4 +1,4 @@
-// Copyright 1998-2019 Dulce Studios. All Rights Reserved.
+// Copyright 2019 Dulce Studios. All Rights Reserved.
 
 #include "HallwayUnitActor.h"
 #include "Components/StaticMeshComponent.h"
