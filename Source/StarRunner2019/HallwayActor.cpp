@@ -38,10 +38,6 @@ void AHallwayActor::Setup()
 	FVector Translation(XLength, 0.0f, 0.0f);
 	FVector Scale(1.0f, 1.0f, 1.0f);
 
-	// const TCHAR* ComponentName = *FString::Printf(TEXT("Yo_%d"), 50);
-
-	// UE_LOG(LogTemp, Warning, FString::Printf(TEXT("Bob %d"), 23));
-
 	int HallwayCount = rand() % 5 + 1;
 
 	UE_LOG(LogTemp, Warning, TEXT("Generating %d hallways"), HallwayCount);
@@ -49,8 +45,6 @@ void AHallwayActor::Setup()
 	int i;
 	for (i = 1; i < HallwayCount; ++i)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("In FOR LOOP"));
-		UE_LOG(LogTemp, Warning, TEXT("HallwayUnitComponent%d"), i);
 		UHallwayUnitComponent *NextHallwayUnitComponent = CreateDefaultSubobject<UHallwayUnitComponent>(FName(*FString::Printf(TEXT("HallwayUnitComponent%d"), i)));
 		FTransform HallwayUnitComponentTransform(Rotator, Translation, Scale);
 
