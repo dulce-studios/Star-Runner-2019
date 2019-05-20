@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "HallwayUnitActor.h"
 #include "StarRunner2019GameMode.generated.h"
 
 UCLASS(minimalapi)
