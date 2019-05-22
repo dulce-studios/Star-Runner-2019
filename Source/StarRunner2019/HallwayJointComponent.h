@@ -11,4 +11,14 @@ class STARRUNNER2019_API UHallwayJointComponent : public UStaticMeshComponent
 
 public:
     UHallwayJointComponent();
+
+private:
+	UFUNCTION(BlueprintCallable)
+	void SetupDeconstructorTriggerBox();
+
+	UFUNCTION(BlueprintCallable)
+	void SetupLeftArrowComponent();
+
+	UFUNCTION(BlueprintCallable)
+	void SetupRightArrowComponent();
 };
