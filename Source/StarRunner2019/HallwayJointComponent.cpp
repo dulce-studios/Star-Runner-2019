@@ -33,7 +33,7 @@ void UHallwayJointComponent::SetupLeftArrowComponent() {
 	UArrowComponent* LeftArrowComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftArrowComponent"));
 
 	FRotator Rotation(0.0, -90.0, 0.0);
-	FVector Translation(0.0, 0.0, 2.0);
+	FVector Translation(0.0, 0.0, 0.0);
 	FVector Scale(0.025, 0.025, 0.025);
 
 	const FTransform LeftArrowComponentTransform(Rotation, Translation, Scale);
@@ -47,7 +47,7 @@ void UHallwayJointComponent::SetupRightArrowComponent() {
 	UArrowComponent* RightArrowComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("RightArrowComponent"));
 
 	FRotator Rotation(0.0, 90.0, 0.0);
-	FVector Translation(0.0, 0.0, 2.0);
+	FVector Translation(0.0, 0.0, 0.0);
 	FVector Scale(0.025, 0.025, 0.025);
 
 	const FTransform RightArrowComponentTransform(Rotation, Translation, Scale);
