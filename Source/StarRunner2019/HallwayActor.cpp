@@ -64,25 +64,16 @@ void AHallwayActor::Setup()
 
 void AHallwayActor::SpawnLeftChildHallway() {
 	UHallwayJointComponent* const HallwayJointComponent = Cast<UHallwayJointComponent>(GetDefaultSubobjectByName(TEXT("HallwayJointComponent")));
-	const UArrowComponent* LeftArrowComponent = Cast<UArrowComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("LeftArrowComponent")));
 
-	FTransform LeftArrowComponentTransform = LeftArrowComponent->GetComponentTransform();
+	UArrowComponent* const LeftChildArrowComponent = Cast<UArrowComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("LeftArrowComponent")));
 
-	FVector LeftArrowComponentLocation = LeftArrowComponentTransform.GetLocation();
-	FQuat LeftArrowComponentRotation = LeftArrowComponentTransform.GetRotation();
-
-	FVector VectorOffset(250, 0, 0);
-	FVector RotationVector = UKismetMathLibrary::Quat_RotateVector(LeftArrowComponentRotation, VectorOffset);
-
-	FVector LeftChildHallwayLocation = LeftArrowComponentLocation + RotationVector;
-	FQuat LeftChildHallwayRotation = LeftArrowComponentRotation;
-	FVector LeftChildHallwayScale = GetActorScale3D();
-
-	FTransform LeftChildHallwayTransform(LeftChildHallwayRotation, LeftChildHallwayLocation, LeftChildHallwayScale);
-
+	FTransform LeftChildHallwayTransform = GetTransformForComponent(LeftChildArrowComponent);
+	
 	UWorld* const World = GetWorld();
 	if (World) {
 		FActorSpawnParameters Info;
+		Info.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
 		AHallwayActor* LeftChildHallway = World->SpawnActor<AHallwayActor>(AHallwayActor::StaticClass(), LeftChildHallwayTransform, Info);
 	}
 	else {
@@ -92,6 +83,25 @@ void AHallwayActor::SpawnLeftChildHallway() {
 
 void AHallwayActor::SpawnRightChildHallway() {
 
+}
+
+FTransform AHallwayActor::GetTransformForComponent(USceneComponent* Component) {
+
+	FTransform ArrowComponentTransform = Component->GetComponentTransform();
+
+	FVector ArrowComponentLocation = ArrowComponentTransform.GetLocation();
+	FQuat ArrowComponentRotation = ArrowComponentTransform.GetRotation();
+
+	FVector VectorOffset(200, 0, 0);
+	FVector RotationVector = UKismetMathLibrary::Quat_RotateVector(ArrowComponentRotation, VectorOffset);
+
+	FVector ChildHallwayLocation = ArrowComponentLocation + RotationVector;
+	FQuat ChildHallwayRotation = ArrowComponentRotation;
+	FVector ChildHallwayScale = GetActorScale3D();
+
+	FTransform ChildHallwayTransform(ChildHallwayRotation, ChildHallwayLocation, ChildHallwayScale);
+
+	return ChildHallwayTransform;
 }
 
 // Called when the game starts or when spawned

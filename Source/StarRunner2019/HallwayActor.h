@@ -21,6 +21,7 @@ protected:
 
 private:
 	void Setup();
+	FTransform GetTransformForComponent(USceneComponent* Component);
 
 public:	
 	// Called every frame
