@@ -2,7 +2,9 @@
 
 #pragma once
 
+#include "HallwayActor.h"
 #include "CoreMinimal.h"
+#include "Engine/World.h"
 #include "GameFramework/GameModeBase.h"
 #include "StarRunner2019GameMode.generated.h"
 
@@ -14,8 +16,8 @@ class AStarRunner2019GameMode : public AGameModeBase
 public:
 	AStarRunner2019GameMode();
 
-	// AHallwayUnitActor* SpawnInitialHallway();
+	AHallwayActor* SpawnInitialHallway();
 
-// protected:
-// 	virtual void BeginPlay() override;
+ protected:
+ 	virtual void BeginPlay();
 };
