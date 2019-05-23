@@ -7,7 +7,7 @@
 // For constructing the hallways
 #include "HallwayJointComponent.h"
 #include "HallwayUnitComponent.h"
-
+#include "Kismet/KismetMathLibrary.h"
 #include <stdlib.h>
 
 // Sets default values
@@ -60,6 +60,38 @@ void AHallwayActor::Setup()
 	HallwayJointComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 	HallwayJointComponent->SetRelativeTransform(HallwayJointComponentTransform);
 	
+}
+
+void AHallwayActor::SpawnLeftChildHallway() {
+	UHallwayJointComponent* const HallwayJointComponent = Cast<UHallwayJointComponent>(GetDefaultSubobjectByName(TEXT("HallwayJointComponent")));
+	const UArrowComponent* LeftArrowComponent = Cast<UArrowComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("LeftArrowComponent")));
+
+	FTransform LeftArrowComponentTransform = LeftArrowComponent->GetComponentTransform();
+
+	FVector LeftArrowComponentLocation = LeftArrowComponentTransform.GetLocation();
+	FQuat LeftArrowComponentRotation = LeftArrowComponentTransform.GetRotation();
+
+	FVector VectorOffset(250, 0, 0);
+	FVector RotationVector = UKismetMathLibrary::Quat_RotateVector(LeftArrowComponentRotation, VectorOffset);
+
+	FVector LeftChildHallwayLocation = LeftArrowComponentLocation + RotationVector;
+	FQuat LeftChildHallwayRotation = LeftArrowComponentRotation;
+	FVector LeftChildHallwayScale = GetActorScale3D();
+
+	FTransform LeftChildHallwayTransform(LeftChildHallwayRotation, LeftChildHallwayLocation, LeftChildHallwayScale);
+
+	UWorld* const World = GetWorld();
+	if (World) {
+		FActorSpawnParameters Info;
+		AHallwayActor* LeftChildHallway = World->SpawnActor<AHallwayActor>(AHallwayActor::StaticClass(), LeftChildHallwayTransform, Info);
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Nooose"));
+	}
+}
+
+void AHallwayActor::SpawnRightChildHallway() {
+
 }
 
 // Called when the game starts or when spawned
