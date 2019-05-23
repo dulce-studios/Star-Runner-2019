@@ -1,8 +1,6 @@
 // Copyright 2019 Dulce Studios. All Rights Reserved.
 
 #include "HallwayJointComponent.h"
-#include "Engine/Classes/Components/BoxComponent.h"
-#include "Engine/Classes/Components/ArrowComponent.h"
 
 // TODO: Refactor by using generics for the component setups
 

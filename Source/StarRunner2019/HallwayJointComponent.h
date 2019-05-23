@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "Engine/Classes/Components/StaticMeshComponent.h"
+#include "Engine/Classes/Components/BoxComponent.h"
+#include "Engine/Classes/Components/ArrowComponent.h"
 #include "HallwayJointComponent.generated.h"
 
 UCLASS(Blueprintable)
