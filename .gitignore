@@ -29,10 +29,6 @@
 *.a
 *.lib
 
-# More UE Generated Binaries
-*.uasset
-*.umap
-
 # Executables
 *.exe
 *.out
