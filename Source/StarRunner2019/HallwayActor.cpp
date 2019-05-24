@@ -2,13 +2,15 @@
 
 #include "HallwayActor.h"
 
-#include "Engine/Classes/Kismet/KismetSystemLibrary.h"
-
-// For constructing the hallways
 #include "HallwayJointComponent.h"
 #include "HallwayUnitComponent.h"
+
+#include "StarRunner2019Character.h"
+
 #include "Kismet/KismetMathLibrary.h"
-#include <stdlib.h>
+#include "Engine/Classes/Kismet/KismetSystemLibrary.h"
+
+#include <stdlib.h> // for rand function LOL
 
 // Sets default values
 AHallwayActor::AHallwayActor()
@@ -54,17 +56,33 @@ void AHallwayActor::Setup()
 		Translation.X += XLength;
 	}
 
-	UHallwayJointComponent *HallwayJointComponent = CreateDefaultSubobject<UHallwayJointComponent>(TEXT("HallwayJointComponent"));
+	HallwayJointComponent = CreateDefaultSubobject<UHallwayJointComponent>(TEXT("HallwayJointComponent"));
 	FTransform HallwayJointComponentTransform(Rotator, Translation, Scale);
 
 	HallwayJointComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 	HallwayJointComponent->SetRelativeTransform(HallwayJointComponentTransform);
-	
+}
+
+void AHallwayActor::OnOverlapBegin(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
+	if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
+		AStarRunner2019Character* Character = Cast<AStarRunner2019Character>(OtherActor);
+		Character->isTurnable = true;
+		SpawnGrandChildrenHallways();
+	}
+}
+
+void AHallwayActor::SpawnGrandChildrenHallways() {
+	LeftChildHallway->SpawnLeftChildHallway();
+	LeftChildHallway->SpawnRightChildHallway();
+	RightChildHallway->SpawnRightChildHallway();
+	RightChildHallway->SpawnLeftChildHallway();
+}
+
+void AHallwayActor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
+
 }
 
 void AHallwayActor::SpawnLeftChildHallway() {
-	UHallwayJointComponent* const HallwayJointComponent = Cast<UHallwayJointComponent>(GetDefaultSubobjectByName(TEXT("HallwayJointComponent")));
-
 	UArrowComponent* const LeftChildArrowComponent = Cast<UArrowComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("LeftArrowComponent")));
 
 	FTransform LeftChildHallwayTransform = GetTransformForComponent(LeftChildArrowComponent);
@@ -82,8 +100,6 @@ void AHallwayActor::SpawnLeftChildHallway() {
 }
 
 void AHallwayActor::SpawnRightChildHallway() {
-	UHallwayJointComponent* const HallwayJointComponent = Cast<UHallwayJointComponent>(GetDefaultSubobjectByName(TEXT("HallwayJointComponent")));
-
 	UArrowComponent* const RightChildArrowComponent = Cast<UArrowComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("RightArrowComponent")));
 
 	FTransform RightChildHallwayTransform = GetTransformForComponent(RightChildArrowComponent);
@@ -123,6 +139,10 @@ FTransform AHallwayActor::GetTransformForComponent(USceneComponent* Component) {
 void AHallwayActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UBoxComponent* HallwayJointBoxComponent = Cast<UBoxComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("TriggerBox")));
+
+	HallwayJointBoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AHallwayActor::OnOverlapBegin);
 }
 
 // Called every frame
