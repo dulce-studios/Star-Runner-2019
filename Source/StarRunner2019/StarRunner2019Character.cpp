@@ -22,7 +22,8 @@ AStarRunner2019Character::AStarRunner2019Character()
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 
-	isTurnable = false;
+	IsTurnable = false;
+	WentLeft = NULL;
 
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
@@ -69,16 +70,18 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent *
 }
 
 void AStarRunner2019Character::TurnLeft() {
-	if (isTurnable) {
+	if (IsTurnable) {
 		float turnAngle = -35.0f;
 		AddControllerYawInput(turnAngle);
+		WentLeft = true;
 	}
 }
 
 void AStarRunner2019Character::TurnRight() {
-	if (isTurnable) {
+	if (IsTurnable) {
 		float turnAngle = 35.0f;
 		AddControllerYawInput(turnAngle);
+		WentLeft = false;
 	}
 }
 

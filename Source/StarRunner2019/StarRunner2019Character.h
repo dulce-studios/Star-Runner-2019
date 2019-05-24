@@ -45,7 +45,10 @@ public:
 	uint32 bUsingMotionControllers : 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool isTurnable;
+	bool IsTurnable;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool WentLeft;
 
 protected:
 	/** Handles moving forward/backward */
