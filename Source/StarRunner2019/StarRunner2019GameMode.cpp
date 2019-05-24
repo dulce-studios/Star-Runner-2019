@@ -51,5 +51,7 @@ AHallwayActor* AStarRunner2019GameMode::SpawnInitialHallway()
 
  void AStarRunner2019GameMode::BeginPlay()
  {
- 	SpawnInitialHallway();
+ 	AHallwayActor* InitialHallway = SpawnInitialHallway();
+	InitialHallway->SpawnLeftChildHallway();
+	InitialHallway->SpawnRightChildHallway();
  }

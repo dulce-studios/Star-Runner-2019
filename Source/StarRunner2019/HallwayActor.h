@@ -19,6 +19,13 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UPROPERTY(BlueprintReadOnly)
+	AHallwayActor* LeftChildHallway;
+
+	UPROPERTY(BlueprintReadOnly)
+	AHallwayActor* RightChildHallway;
+
+
 private:
 	void Setup();
 	FTransform GetTransformForComponent(USceneComponent* Component);

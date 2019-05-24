@@ -74,7 +74,7 @@ void AHallwayActor::SpawnLeftChildHallway() {
 		FActorSpawnParameters Info;
 		Info.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		AHallwayActor* LeftChildHallway = World->SpawnActor<AHallwayActor>(AHallwayActor::StaticClass(), LeftChildHallwayTransform, Info);
+		LeftChildHallway = World->SpawnActor<AHallwayActor>(AHallwayActor::StaticClass(), LeftChildHallwayTransform, Info);
 	}
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("Nooose"));
@@ -82,7 +82,22 @@ void AHallwayActor::SpawnLeftChildHallway() {
 }
 
 void AHallwayActor::SpawnRightChildHallway() {
+	UHallwayJointComponent* const HallwayJointComponent = Cast<UHallwayJointComponent>(GetDefaultSubobjectByName(TEXT("HallwayJointComponent")));
 
+	UArrowComponent* const RightChildArrowComponent = Cast<UArrowComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("RightArrowComponent")));
+
+	FTransform RightChildHallwayTransform = GetTransformForComponent(RightChildArrowComponent);
+
+	UWorld* const World = GetWorld();
+	if (World) {
+		FActorSpawnParameters Info;
+		Info.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		RightChildHallway = World->SpawnActor<AHallwayActor>(AHallwayActor::StaticClass(), RightChildHallwayTransform, Info);
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Nooose"));
+	}
 }
 
 FTransform AHallwayActor::GetTransformForComponent(USceneComponent* Component) {
