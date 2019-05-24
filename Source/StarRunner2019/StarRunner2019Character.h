@@ -44,6 +44,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	uint32 bUsingMotionControllers : 1;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool isTurnable;
+
 protected:
 	/** Handles moving forward/backward */
 	void MoveForward(float Val);
@@ -51,7 +54,9 @@ protected:
 	/** Handles stafing movement, left and right */
 	void MoveRight(float Val);
 
-	void Ass();
+	void TurnLeft();
+
+	void TurnRight();
 
 	/**
 	 * Called via input to turn at a given rate.

@@ -22,6 +22,8 @@ AStarRunner2019Character::AStarRunner2019Character()
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 
+	isTurnable = false;
+
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
@@ -58,6 +60,26 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent *
 	PlayerInputComponent->BindAxis("TurnRate", this, &AStarRunner2019Character::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AStarRunner2019Character::LookUpAtRate);
+
+	PlayerInputComponent->BindAction("TurnLeft", IE_Pressed, this, &AStarRunner2019Character::TurnLeft);
+	PlayerInputComponent->BindAction("TurnLeft", IE_Released , this, &AStarRunner2019Character::TurnLeft);
+
+	PlayerInputComponent->BindAction("TurnRight", IE_Pressed, this, &AStarRunner2019Character::TurnRight);
+	PlayerInputComponent->BindAction("TurnRight", IE_Released, this, &AStarRunner2019Character::TurnRight);
+}
+
+void AStarRunner2019Character::TurnLeft() {
+	if (isTurnable) {
+		float turnAngle = -35.0f;
+		AddControllerYawInput(turnAngle);
+	}
+}
+
+void AStarRunner2019Character::TurnRight() {
+	if (isTurnable) {
+		float turnAngle = 35.0f;
+		AddControllerYawInput(turnAngle);
+	}
 }
 
 void AStarRunner2019Character::MoveForward(float Value)
