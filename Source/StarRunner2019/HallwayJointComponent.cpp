@@ -9,13 +9,13 @@ UHallwayJointComponent::UHallwayJointComponent() {
 	UStaticMesh* StaticMesh = MeshAsset.Object;
 	this->SetStaticMesh(StaticMesh);
 
-	SetupDeconstructorTriggerBox();
+	SetupTriggerBox();
 	SetupLeftArrowComponent();
 	SetupRightArrowComponent();
 }
 
-void UHallwayJointComponent::SetupDeconstructorTriggerBox() {
-	UBoxComponent* DeconstructorTriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("DeconstructorTriggerBox"));
+void UHallwayJointComponent::SetupTriggerBox() {
+	UBoxComponent* DeconstructorTriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
 
 	FRotator Rotation(0.0, 0.0, 0.0);
 	FVector Translation(0.0, 0.0, 2.0);

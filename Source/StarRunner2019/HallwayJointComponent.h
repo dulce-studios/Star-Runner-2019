@@ -16,7 +16,7 @@ public:
 
 private:
 	UFUNCTION(BlueprintCallable)
-	void SetupDeconstructorTriggerBox();
+	void SetupTriggerBox();
 
 	UFUNCTION(BlueprintCallable)
 	void SetupLeftArrowComponent();
