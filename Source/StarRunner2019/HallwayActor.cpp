@@ -66,7 +66,7 @@ void AHallwayActor::Setup()
 void AHallwayActor::OnOverlapBegin(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
 	if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
 		AStarRunner2019Character* Character = Cast<AStarRunner2019Character>(OtherActor);
-		Character->isTurnable = true;
+		Character->IsTurnable = true;
 		SpawnGrandChildrenHallways();
 	}
 }
@@ -79,7 +79,26 @@ void AHallwayActor::SpawnGrandChildrenHallways() {
 }
 
 void AHallwayActor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
+	if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
+		UE_LOG(LogTemp, Warning, TEXT("BEN HUR"));
+		AStarRunner2019Character* Character = Cast<AStarRunner2019Character>(OtherActor);
+		Character->IsTurnable = false;
 
+		if (Character->WentLeft) {
+			DestroyChildHallways(RightChildHallway);
+		}
+		else {
+			DestroyChildHallways(LeftChildHallway);
+		}
+
+		Destroy(); // destroy self
+	}
+}
+
+void AHallwayActor::DestroyChildHallways(AHallwayActor* ChildHallway) {
+	ChildHallway->LeftChildHallway->Destroy();
+	ChildHallway->RightChildHallway->Destroy();
+	ChildHallway->Destroy();
 }
 
 void AHallwayActor::SpawnLeftChildHallway() {
@@ -143,6 +162,7 @@ void AHallwayActor::BeginPlay()
 	UBoxComponent* HallwayJointBoxComponent = Cast<UBoxComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("TriggerBox")));
 
 	HallwayJointBoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AHallwayActor::OnOverlapBegin);
+	HallwayJointBoxComponent->OnComponentEndOverlap.AddDynamic(this, &AHallwayActor::OnOverlapEnd);
 }
 
 // Called every frame

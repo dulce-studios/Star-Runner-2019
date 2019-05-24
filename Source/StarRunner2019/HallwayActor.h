@@ -40,6 +40,8 @@ private:
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	void SpawnGrandChildrenHallways();
+
+	void DestroyChildHallways(AHallwayActor* ChildHallway);
 	
 	FTransform GetTransformForComponent(USceneComponent* Component);
 
