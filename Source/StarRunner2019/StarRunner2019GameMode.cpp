@@ -16,13 +16,7 @@ AHallwayActor* AStarRunner2019GameMode::SpawnInitialHallway()
 	AController* PlayerPawnController = DefaultPawnClass.GetDefaultObject()->GetController();
 	AActor* PlayerStartActor = FindPlayerStart(PlayerPawnController, FString());
 
-	UE_LOG(LogTemp, Warning, TEXT("ZORG"));
-
-
-
 	USceneComponent* RootComponent = PlayerStartActor->GetRootComponent();
-
-	UE_LOG(LogTemp, Warning, TEXT("Sad %d"), RootComponent == NULL);
 
 	// Based on https://answers.unrealengine.com/questions/337711/getworldtransform-for-scenecomponent-in-c.html
 	FTransform WorldTransform = RootComponent->GetComponentTransform();
@@ -39,7 +33,6 @@ AHallwayActor* AStarRunner2019GameMode::SpawnInitialHallway()
 
 	// Notice https://stackoverflow.com/questions/5503352/const-before-or-const-after
 	UWorld* const World = GetWorld();
-	UE_LOG(LogTemp, Warning, TEXT("Heh %d"), World == NULL);
 	if (World) {
 		AHallwayActor* Boi = World->SpawnActor<AHallwayActor>(AHallwayActor::StaticClass(), SpawnTransform, Info);
 		return Boi;
