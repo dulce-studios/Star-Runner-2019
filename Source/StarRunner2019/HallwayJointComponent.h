@@ -1,5 +1,7 @@
 // Copyright 2019 Dulce Studios. All Rights Reserved.
 
+#pragma once
+
 #include "CoreMinimal.h"
 #include "Engine/Classes/Components/StaticMeshComponent.h"
 #include "Engine/Classes/Components/BoxComponent.h"
