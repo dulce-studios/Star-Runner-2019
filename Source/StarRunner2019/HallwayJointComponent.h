@@ -25,4 +25,6 @@ private:
 
 	UFUNCTION()
 	void SetupRightArrowComponent();
+
+	void AttachComponentToSelf(UPrimitiveComponent* const component, const FTransform transform);
 };

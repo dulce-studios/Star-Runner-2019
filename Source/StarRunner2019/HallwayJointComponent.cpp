@@ -2,8 +2,6 @@
 
 #include "HallwayJointComponent.h"
 
-// TODO: Refactor by using generics for the component setups
-
 UHallwayJointComponent::UHallwayJointComponent() {
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("StaticMesh'/Game/Geometry/Meshes/hallwayjoint.hallwayjoint'"));
 	UStaticMesh* StaticMesh = MeshAsset.Object;
@@ -20,13 +18,9 @@ void UHallwayJointComponent::SetupTriggerBox() {
 	FRotator Rotation(0.0, 0.0, 0.0);
 	FVector Translation(0.0, 0.0, 2.0);
 	FVector Scale(0.075, 0.075, 0.075);
+	FTransform DeconstructorTriggerBoxTransform(Rotation, Translation, Scale);
 
-	const FTransform DeconstructorTriggerBoxTransform(Rotation, Translation, Scale);
-
-	DeconstructorTriggerBox->SetRelativeTransform(DeconstructorTriggerBoxTransform);
-	DeconstructorTriggerBox->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
-	DeconstructorTriggerBox->SetVisibility(false);
-
+	this->AttachComponentToSelf(DeconstructorTriggerBox, DeconstructorTriggerBoxTransform);
 }
 
 void UHallwayJointComponent::SetupLeftArrowComponent() {
@@ -35,12 +29,9 @@ void UHallwayJointComponent::SetupLeftArrowComponent() {
 	FRotator Rotation(0.0, -90.0, 0.0);
 	FVector Translation(0.0, 0.0, 0.0);
 	FVector Scale(0.025, 0.025, 0.025);
+	FTransform LeftArrowComponentTransform(Rotation, Translation, Scale);
 
-	const FTransform LeftArrowComponentTransform(Rotation, Translation, Scale);
-
-	LeftArrowComponent->SetRelativeTransform(LeftArrowComponentTransform);
-	LeftArrowComponent->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
-	LeftArrowComponent->SetVisibility(false);
+	this->AttachComponentToSelf(LeftArrowComponent, LeftArrowComponentTransform);
 }
 
 void UHallwayJointComponent::SetupRightArrowComponent() {
@@ -49,10 +40,13 @@ void UHallwayJointComponent::SetupRightArrowComponent() {
 	FRotator Rotation(0.0, 90.0, 0.0);
 	FVector Translation(0.0, 0.0, 0.0);
 	FVector Scale(0.025, 0.025, 0.025);
+	FTransform RightArrowComponentTransform(Rotation, Translation, Scale);
 
-	const FTransform RightArrowComponentTransform(Rotation, Translation, Scale);
+	this->AttachComponentToSelf(RightArrowComponent, RightArrowComponentTransform);
+}
 
-	RightArrowComponent->SetRelativeTransform(RightArrowComponentTransform);
-	RightArrowComponent->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
-	RightArrowComponent->SetVisibility(false);
+void UHallwayJointComponent::AttachComponentToSelf(UPrimitiveComponent* const component, const FTransform transform) {
+	component->SetRelativeTransform(transform);
+	component->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
+	component->SetVisibility(false);
 }
