@@ -8,7 +8,7 @@
 #include "Engine/Classes/Components/ArrowComponent.h"
 #include "HallwayJointComponent.generated.h"
 
-UCLASS(Blueprintable)
+UCLASS()
 class STARRUNNER2019_API UHallwayJointComponent : public UStaticMeshComponent
 {
     GENERATED_BODY()
@@ -17,12 +17,12 @@ public:
     UHallwayJointComponent();
 
 private:
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void SetupTriggerBox();
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void SetupLeftArrowComponent();
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void SetupRightArrowComponent();
 };
