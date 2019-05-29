@@ -45,6 +45,10 @@ private:
 	
 	FTransform GetTransformForComponent(USceneComponent* Component);
 
+	FTransform AppendHallwayUnitComponents(const FVector Origin, const FVector BoxExtent, const float SphereRadius);
+
+	const int GetRandomNumberInRange(int LowerBound, int UpperBound);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

@@ -12,6 +12,9 @@
 
 #include <stdlib.h> // for rand function LOL
 
+#define HALLWAY_COUNT_MIN 1
+#define HALLWAY_COUNT_MAX 5
+
 // Sets default values
 AHallwayActor::AHallwayActor()
 {
@@ -19,9 +22,9 @@ AHallwayActor::AHallwayActor()
 	PrimaryActorTick.bCanEverTick = true;
 
 	USceneComponent *RootSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
-	RootComponent = RootSceneComponent;
+	this->RootComponent = RootSceneComponent;
 
-	Setup();
+	this->Setup();
 }
 
 void AHallwayActor::Setup()
@@ -33,65 +36,72 @@ void AHallwayActor::Setup()
 	FVector BoxExtent;
 	float SphereRadius;
 	UKismetSystemLibrary::GetComponentBounds(InitialHallwayUnitComponent, Origin, BoxExtent, SphereRadius);
+	
+	FTransform HallwayUnitComponentsEndTransform = this->AppendHallwayUnitComponents(Origin, BoxExtent, SphereRadius);
 
+	this->HallwayJointComponent = CreateDefaultSubobject<UHallwayJointComponent>(TEXT("HallwayJointComponent"));
+	this->HallwayJointComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	this->HallwayJointComponent->SetRelativeTransform(HallwayUnitComponentsEndTransform);
+}
+
+
+FTransform AHallwayActor::AppendHallwayUnitComponents(const FVector Origin, const FVector BoxExtent, const float SphereRadius) {
 	float XLength = (BoxExtent.X * 2.0f);
 
 	FRotator Rotator(0.0f, 0.0f, 0.0f);
 	FVector Translation(XLength, 0.0f, 0.0f);
 	FVector Scale(1.0f, 1.0f, 1.0f);
 
-	int HallwayCount = rand() % 5 + 1;
+	int HallwayCount = this->GetRandomNumberInRange(HALLWAY_COUNT_MIN, HALLWAY_COUNT_MAX);
 
-	UE_LOG(LogTemp, Warning, TEXT("Generating %d hallways"), HallwayCount);
-
-	int i;
-	for (i = 1; i < HallwayCount; ++i)
+	for (auto i = 1; i < HallwayCount; ++i)
 	{
-		UHallwayUnitComponent *NextHallwayUnitComponent = CreateDefaultSubobject<UHallwayUnitComponent>(FName(*FString::Printf(TEXT("HallwayUnitComponent%d"), i)));
+		UHallwayUnitComponent* NextHallwayUnitComponent = CreateDefaultSubobject<UHallwayUnitComponent>(FName(*FString::Printf(TEXT("HallwayUnitComponent%d"), i)));
 		FTransform HallwayUnitComponentTransform(Rotator, Translation, Scale);
 
-		NextHallwayUnitComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		NextHallwayUnitComponent->AttachToComponent(this->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 		NextHallwayUnitComponent->SetRelativeTransform(HallwayUnitComponentTransform);
 
 		Translation.X += XLength;
 	}
 
-	HallwayJointComponent = CreateDefaultSubobject<UHallwayJointComponent>(TEXT("HallwayJointComponent"));
-	FTransform HallwayJointComponentTransform(Rotator, Translation, Scale);
+	FTransform HallwayUnitComponentsEndTransform(Rotator, Translation, Scale);
+	
+	return HallwayUnitComponentsEndTransform;
+}
 
-	HallwayJointComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-	HallwayJointComponent->SetRelativeTransform(HallwayJointComponentTransform);
+const int AHallwayActor::GetRandomNumberInRange(int LowerBound, int UpperBound) {
+	return rand() % UpperBound + LowerBound;
 }
 
 void AHallwayActor::OnOverlapBegin(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
 	if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
 		AStarRunner2019Character* Character = Cast<AStarRunner2019Character>(OtherActor);
 		Character->IsTurnable = true;
-		SpawnGrandChildrenHallways();
+		this->SpawnGrandChildrenHallways();
 	}
 }
 
 void AHallwayActor::SpawnGrandChildrenHallways() {
-	LeftChildHallway->SpawnLeftChildHallway();
-	LeftChildHallway->SpawnRightChildHallway();
-	RightChildHallway->SpawnRightChildHallway();
-	RightChildHallway->SpawnLeftChildHallway();
+	this->LeftChildHallway->SpawnLeftChildHallway();
+	this->LeftChildHallway->SpawnRightChildHallway();
+	this->RightChildHallway->SpawnRightChildHallway();
+	this->RightChildHallway->SpawnLeftChildHallway();
 }
 
 void AHallwayActor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
 	if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
-		UE_LOG(LogTemp, Warning, TEXT("BEN HUR"));
 		AStarRunner2019Character* Character = Cast<AStarRunner2019Character>(OtherActor);
 		Character->IsTurnable = false;
 
 		if (Character->WentLeft) {
-			DestroyChildHallways(RightChildHallway);
+			this->DestroyChildHallways(RightChildHallway);
 		}
 		else {
-			DestroyChildHallways(LeftChildHallway);
+			this->DestroyChildHallways(LeftChildHallway);
 		}
 
-		Destroy(); // destroy self
+		this->Destroy();
 	}
 }
 
