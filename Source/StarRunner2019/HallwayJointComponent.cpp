@@ -20,7 +20,7 @@ void UHallwayJointComponent::SetupTriggerBox() {
 	FVector Scale(0.075, 0.075, 0.075);
 	FTransform DeconstructorTriggerBoxTransform(Rotation, Translation, Scale);
 
-	this->AttachComponentToSelf(DeconstructorTriggerBox, DeconstructorTriggerBoxTransform);
+	this->AttachComponentToAnotherComponent(DeconstructorTriggerBox, this, DeconstructorTriggerBoxTransform);
 }
 
 void UHallwayJointComponent::SetupLeftArrowComponent() {
@@ -31,7 +31,7 @@ void UHallwayJointComponent::SetupLeftArrowComponent() {
 	FVector Scale(0.025, 0.025, 0.025);
 	FTransform LeftArrowComponentTransform(Rotation, Translation, Scale);
 
-	this->AttachComponentToSelf(LeftArrowComponent, LeftArrowComponentTransform);
+	this->AttachComponentToAnotherComponent(LeftArrowComponent, this, LeftArrowComponentTransform);
 }
 
 void UHallwayJointComponent::SetupRightArrowComponent() {
@@ -42,11 +42,10 @@ void UHallwayJointComponent::SetupRightArrowComponent() {
 	FVector Scale(0.025, 0.025, 0.025);
 	FTransform RightArrowComponentTransform(Rotation, Translation, Scale);
 
-	this->AttachComponentToSelf(RightArrowComponent, RightArrowComponentTransform);
+	this->AttachComponentToAnotherComponent(RightArrowComponent, this, RightArrowComponentTransform);
 }
 
-void UHallwayJointComponent::AttachComponentToSelf(UPrimitiveComponent* const component, const FTransform transform) {
-	component->SetRelativeTransform(transform);
-	component->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
-	component->SetVisibility(false);
+void UHallwayJointComponent::AttachComponentToAnotherComponent(USceneComponent* Component, USceneComponent* OtherComponent, FTransform ComponentTransform) {
+	IHallwayInterface::AttachComponentToAnotherComponent(Component, OtherComponent, ComponentTransform);
+	Component->SetVisibility(false);
 }

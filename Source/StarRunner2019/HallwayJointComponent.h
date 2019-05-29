@@ -3,14 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "HallwayInterface.h"
+
 #include "Engine/Classes/Components/StaticMeshComponent.h"
 #include "Engine/Classes/Components/BoxComponent.h"
 #include "Engine/Classes/Components/ArrowComponent.h"
 #include "HallwayJointComponent.generated.h"
 
 UCLASS()
-class STARRUNNER2019_API UHallwayJointComponent : public UStaticMeshComponent
-{
+class STARRUNNER2019_API UHallwayJointComponent : public UStaticMeshComponent, public IHallwayInterface {
     GENERATED_BODY()
 
 public:
@@ -26,5 +28,6 @@ private:
 	UFUNCTION()
 	void SetupRightArrowComponent();
 
-	void AttachComponentToSelf(UPrimitiveComponent* const component, const FTransform transform);
+	UFUNCTION()
+	void AttachComponentToAnotherComponent(USceneComponent* Component, USceneComponent* OtherComponent, FTransform ComponentTransform) override;
 };

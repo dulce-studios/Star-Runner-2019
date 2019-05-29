@@ -3,13 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HallwayJointComponent.h"
+
+
 #include "GameFramework/Actor.h"
+#include "HallwayInterface.h"
+#include "HallwayJointComponent.h"
+
 #include "HallwayActor.generated.h"
 
 UCLASS()
-class STARRUNNER2019_API AHallwayActor : public AActor
-{
+class STARRUNNER2019_API AHallwayActor : public AActor, public IHallwayInterface {
 	GENERATED_BODY()
 	
 public:	
@@ -43,7 +46,9 @@ private:
 
 	void DestroyChildHallways(AHallwayActor* ChildHallway);
 	
-	FTransform GetTransformForComponent(USceneComponent* Component);
+	FTransform* GetTransformForComponent(USceneComponent* Component) override;
+	
+	AHallwayActor* SpawnChildActor(AActor* ParentActor, FTransform* Transform) override;
 
 	FTransform AppendHallwayUnitComponents(const FVector Origin, const FVector BoxExtent, const float SphereRadius);
 

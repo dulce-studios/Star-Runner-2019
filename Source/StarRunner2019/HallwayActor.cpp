@@ -2,7 +2,6 @@
 
 #include "HallwayActor.h"
 
-#include "HallwayJointComponent.h"
 #include "HallwayUnitComponent.h"
 
 #include "StarRunner2019Character.h"
@@ -16,8 +15,7 @@
 #define HALLWAY_COUNT_MAX 5
 
 // Sets default values
-AHallwayActor::AHallwayActor()
-{
+AHallwayActor::AHallwayActor() {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -27,8 +25,7 @@ AHallwayActor::AHallwayActor()
 	this->Setup();
 }
 
-void AHallwayActor::Setup()
-{
+void AHallwayActor::Setup() {
 	UHallwayUnitComponent *InitialHallwayUnitComponent = CreateDefaultSubobject<UHallwayUnitComponent>(TEXT("InitialHallwayUnitComponent"));
 	InitialHallwayUnitComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 
@@ -40,8 +37,7 @@ void AHallwayActor::Setup()
 	FTransform HallwayUnitComponentsEndTransform = this->AppendHallwayUnitComponents(Origin, BoxExtent, SphereRadius);
 
 	this->HallwayJointComponent = CreateDefaultSubobject<UHallwayJointComponent>(TEXT("HallwayJointComponent"));
-	this->HallwayJointComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-	this->HallwayJointComponent->SetRelativeTransform(HallwayUnitComponentsEndTransform);
+	IHallwayInterface::AttachComponentToAnotherComponent(this->HallwayJointComponent, this->GetRootComponent(), HallwayUnitComponentsEndTransform);
 }
 
 
@@ -113,40 +109,17 @@ void AHallwayActor::DestroyChildHallways(AHallwayActor* ChildHallway) {
 
 void AHallwayActor::SpawnLeftChildHallway() {
 	UArrowComponent* const LeftChildArrowComponent = Cast<UArrowComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("LeftArrowComponent")));
-
-	FTransform LeftChildHallwayTransform = GetTransformForComponent(LeftChildArrowComponent);
-	
-	UWorld* const World = GetWorld();
-	if (World) {
-		FActorSpawnParameters Info;
-		Info.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		LeftChildHallway = World->SpawnActor<AHallwayActor>(AHallwayActor::StaticClass(), LeftChildHallwayTransform, Info);
-	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("Nooose"));
-	}
+	FTransform* LeftChildHallwayTransform = GetTransformForComponent(LeftChildArrowComponent);
+	this->LeftChildHallway = this->SpawnChildActor(this, LeftChildHallwayTransform);
 }
 
 void AHallwayActor::SpawnRightChildHallway() {
 	UArrowComponent* const RightChildArrowComponent = Cast<UArrowComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("RightArrowComponent")));
-
-	FTransform RightChildHallwayTransform = GetTransformForComponent(RightChildArrowComponent);
-
-	UWorld* const World = GetWorld();
-	if (World) {
-		FActorSpawnParameters Info;
-		Info.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		RightChildHallway = World->SpawnActor<AHallwayActor>(AHallwayActor::StaticClass(), RightChildHallwayTransform, Info);
-	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("Nooose"));
-	}
+	FTransform* RightChildHallwayTransform = GetTransformForComponent(RightChildArrowComponent);
+	this->RightChildHallway = this->SpawnChildActor(this, RightChildHallwayTransform);
 }
 
-FTransform AHallwayActor::GetTransformForComponent(USceneComponent* Component) {
-
+FTransform* AHallwayActor::GetTransformForComponent(USceneComponent* Component) {
 	FTransform ArrowComponentTransform = Component->GetComponentTransform();
 
 	FVector ArrowComponentLocation = ArrowComponentTransform.GetLocation();
@@ -159,14 +132,28 @@ FTransform AHallwayActor::GetTransformForComponent(USceneComponent* Component) {
 	FQuat ChildHallwayRotation = ArrowComponentRotation;
 	FVector ChildHallwayScale = GetActorScale3D();
 
-	FTransform ChildHallwayTransform(ChildHallwayRotation, ChildHallwayLocation, ChildHallwayScale);
+	FTransform* ChildHallwayTransform = new FTransform(ChildHallwayRotation, ChildHallwayLocation, ChildHallwayScale);
 
 	return ChildHallwayTransform;
 }
 
+AHallwayActor* AHallwayActor::SpawnChildActor(AActor* ParentActor, FTransform* Transform) {
+	UWorld* World = ParentActor->GetWorld();
+
+	if (World) {
+		FActorSpawnParameters Info;
+		Info.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		return World->SpawnActor<AHallwayActor>(AHallwayActor::StaticClass(), *Transform, Info);
+
+	}
+	else {
+		return nullptr;
+	}
+}
+
 // Called when the game starts or when spawned
-void AHallwayActor::BeginPlay()
-{
+void AHallwayActor::BeginPlay() {
 	Super::BeginPlay();
 
 	UBoxComponent* HallwayJointBoxComponent = Cast<UBoxComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("TriggerBox")));
@@ -176,7 +163,6 @@ void AHallwayActor::BeginPlay()
 }
 
 // Called every frame
-void AHallwayActor::Tick(float DeltaTime)
-{
+void AHallwayActor::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 }

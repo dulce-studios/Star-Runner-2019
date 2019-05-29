@@ -1,8 +1,6 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "StarRunner2019GameMode.h"
-#include "StarRunner2019Character.h"
-#include "UObject/ConstructorHelpers.h"
 
 AStarRunner2019GameMode::AStarRunner2019GameMode()
 {
