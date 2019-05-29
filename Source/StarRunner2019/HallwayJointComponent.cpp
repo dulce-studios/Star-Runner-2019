@@ -7,9 +7,9 @@ UHallwayJointComponent::UHallwayJointComponent() {
 	UStaticMesh* StaticMesh = MeshAsset.Object;
 	this->SetStaticMesh(StaticMesh);
 
-	SetupTriggerBox();
-	SetupLeftArrowComponent();
-	SetupRightArrowComponent();
+	this->SetupTriggerBox();
+	this->SetupLeftArrowComponent();
+	this->SetupRightArrowComponent();
 }
 
 void UHallwayJointComponent::SetupTriggerBox() {
