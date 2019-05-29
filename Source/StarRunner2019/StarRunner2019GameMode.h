@@ -2,18 +2,26 @@
 
 #pragma once
 
+#include "HallwayActor.h"
+#include "HallwayInterface.h"
+#include "StarRunner2019Character.h"
+
 #include "CoreMinimal.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Engine/World.h"
 #include "GameFramework/GameModeBase.h"
 #include "StarRunner2019GameMode.generated.h"
 
 UCLASS(minimalapi)
-class AStarRunner2019GameMode : public AGameModeBase
+class AStarRunner2019GameMode : public AGameModeBase, public IHallwayInterface
 {
 	GENERATED_BODY()
 
 public:
 	AStarRunner2019GameMode();
+
+	AHallwayActor* SpawnInitialHallway();
+
+ protected:
+ 	virtual void BeginPlay();
 };
-
-
-

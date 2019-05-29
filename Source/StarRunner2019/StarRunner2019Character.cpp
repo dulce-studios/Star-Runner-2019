@@ -1,7 +1,6 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "StarRunner2019Character.h"
-#include "HallwayUnitActor.h"
 #include "Engine/EngineBaseTypes.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -22,6 +21,9 @@ AStarRunner2019Character::AStarRunner2019Character()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+
+	IsTurnable = false;
+	WentLeft = NULL;
 
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
@@ -51,7 +53,6 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent *
 	// Bind movement events
 	PlayerInputComponent->BindAxis("MoveForward", this, &AStarRunner2019Character::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AStarRunner2019Character::MoveRight);
-	PlayerInputComponent->BindAction("Ass", EInputEvent::IE_Pressed, this, &AStarRunner2019Character::Ass);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
@@ -60,6 +61,28 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent *
 	PlayerInputComponent->BindAxis("TurnRate", this, &AStarRunner2019Character::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AStarRunner2019Character::LookUpAtRate);
+
+	PlayerInputComponent->BindAction("TurnLeft", IE_Pressed, this, &AStarRunner2019Character::TurnLeft);
+	PlayerInputComponent->BindAction("TurnLeft", IE_Released , this, &AStarRunner2019Character::TurnLeft);
+
+	PlayerInputComponent->BindAction("TurnRight", IE_Pressed, this, &AStarRunner2019Character::TurnRight);
+	PlayerInputComponent->BindAction("TurnRight", IE_Released, this, &AStarRunner2019Character::TurnRight);
+}
+
+void AStarRunner2019Character::TurnLeft() {
+	if (IsTurnable) {
+		float turnAngle = -35.0f;
+		AddControllerYawInput(turnAngle);
+		WentLeft = true;
+	}
+}
+
+void AStarRunner2019Character::TurnRight() {
+	if (IsTurnable) {
+		float turnAngle = 35.0f;
+		AddControllerYawInput(turnAngle);
+		WentLeft = false;
+	}
 }
 
 void AStarRunner2019Character::MoveForward(float Value)
@@ -90,17 +113,4 @@ void AStarRunner2019Character::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
-}
-
-void AStarRunner2019Character::Ass()
-{
-	// Get actor's current location
-
-	UE_LOG(LogTemp, Warning, TEXT("PLEASE"));
-
-	FVector NewLocation = GetActorLocation() + FVector(50.0f, 0.0f, 0.0f);
-	FRotator Rotation(0.0f, 0.0f, 0.0f);
-	FActorSpawnParameters SpawnInfo;
-
-	GetWorld()->SpawnActor<AHallwayUnitActor>(NewLocation, Rotation, SpawnInfo);
 }
