@@ -1,6 +1,9 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "StarRunner2019Character.h"
+#include "HallwayActor.h"
+
+#include "Components/BoxComponent.h"
 #include "Engine/EngineBaseTypes.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Animation/AnimInstance.h"
@@ -13,7 +16,8 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
-#define BASE_SPEED 500
+#define BASE_SPEED 500.0f
+#define MAX_SPEED 1500.0f
 
 //////////////////////////////////////////////////////////////////////////
 // AStarRunner2019Character
@@ -21,10 +25,11 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 AStarRunner2019Character::AStarRunner2019Character()
 {
 	// Set size for collision capsule
-	this->GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+	this->CharacterCapsuleComponent =  GetCapsuleComponent();
+	this->CharacterCapsuleComponent->InitCapsuleSize(55.f, 96.0f);
 
 	this->IsTurnable = false;
-	this->WentLeft = NULL;
+	this->WentLeft = false;
 	this->HallwaysPassedCount = 0;
 
 	this->MovementComponent = this->GetCharacterMovement();
@@ -36,7 +41,7 @@ AStarRunner2019Character::AStarRunner2019Character()
 
 	// Create a CameraComponent
 	this->FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	this->FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
+	this->FirstPersonCameraComponent->SetupAttachment(this->CharacterCapsuleComponent);
 	this->FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 0.0f); // Position the camera
 	this->FirstPersonCameraComponent->bUsePawnControlRotation = true;
 }
@@ -45,6 +50,9 @@ void AStarRunner2019Character::BeginPlay()
 {
 	// Call the base class
 	Super::BeginPlay();
+
+	this->CharacterCapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AStarRunner2019Character::OnOverlapBegin);
+	this->CharacterCapsuleComponent->OnComponentEndOverlap.AddDynamic(this, &AStarRunner2019Character::OnOverlapEnd);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -113,4 +121,22 @@ void AStarRunner2019Character::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	this->AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void AStarRunner2019Character::OnOverlapBegin(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
+}
+
+void AStarRunner2019Character::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
+	if (OtherActor->IsA(AHallwayActor::StaticClass())) {
+		AHallwayActor* HallwayActor = Cast<AHallwayActor>(OtherActor);
+		UHallwayJointComponent* HallwayJointComponent = Cast<UHallwayJointComponent>(HallwayActor->GetDefaultSubobjectByName(TEXT("HallwayJointComponent")));
+
+		UBoxComponent* HallwayJointBoxComponent = Cast<UBoxComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("TriggerBox")));
+
+		if (HallwayJointBoxComponent == OtherComp) {
+			++this->HallwaysPassedCount;
+
+			if (this->HallwaysPassedCount % 5 == 0 && this->MovementComponent->GetMaxSpeed() <= MAX_SPEED) this->MovementComponent->MaxWalkSpeed += 50;
+		}
+	}
 }
