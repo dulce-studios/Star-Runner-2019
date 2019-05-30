@@ -2,6 +2,7 @@
 
 #include "StarRunner2019Character.h"
 #include "Engine/EngineBaseTypes.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -9,10 +10,10 @@
 #include "GameFramework/InputSettings.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
-#include "MotionControllerComponent.h"
-#include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
+
+#define BASE_SPEED 500
 
 //////////////////////////////////////////////////////////////////////////
 // AStarRunner2019Character
@@ -20,20 +21,24 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 AStarRunner2019Character::AStarRunner2019Character()
 {
 	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+	this->GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 
-	IsTurnable = false;
-	WentLeft = NULL;
+	this->IsTurnable = false;
+	this->WentLeft = NULL;
+	this->HallwaysPassedCount = 0;
+
+	this->MovementComponent = this->GetCharacterMovement();
+	this->MovementComponent->MaxWalkSpeed = BASE_SPEED;
 
 	// set our turn rates for input
-	BaseTurnRate = 45.f;
-	BaseLookUpRate = 45.f;
+	this->BaseTurnRate = 45.f;
+	this->BaseLookUpRate = 45.f;
 
 	// Create a CameraComponent
-	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
-	FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 0.0f); // Position the camera
-	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+	this->FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	this->FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
+	this->FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 0.0f); // Position the camera
+	this->FirstPersonCameraComponent->bUsePawnControlRotation = true;
 }
 
 void AStarRunner2019Character::BeginPlay()
@@ -72,26 +77,21 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent *
 void AStarRunner2019Character::TurnLeft() {
 	if (IsTurnable) {
 		float turnAngle = -35.0f;
-		AddControllerYawInput(turnAngle);
-		WentLeft = true;
+		this->AddControllerYawInput(turnAngle);
+		this->WentLeft = true;
 	}
 }
 
 void AStarRunner2019Character::TurnRight() {
 	if (IsTurnable) {
 		float turnAngle = 35.0f;
-		AddControllerYawInput(turnAngle);
-		WentLeft = false;
+		this->AddControllerYawInput(turnAngle);
+		this->WentLeft = false;
 	}
 }
 
-void AStarRunner2019Character::MoveForward(float Value)
-{
-	if (Value != 0.0f)
-	{
-		// add movement in that direction
-		AddMovementInput(GetActorForwardVector(), Value);
-	}
+void AStarRunner2019Character::MoveForward(float Value) {
+	this->AddMovementInput(GetActorForwardVector(), 1.0f);
 }
 
 void AStarRunner2019Character::MoveRight(float Value)
@@ -99,18 +99,18 @@ void AStarRunner2019Character::MoveRight(float Value)
 	if (Value != 0.0f)
 	{
 		// add movement in that direction
-		AddMovementInput(GetActorRightVector(), Value);
+		this->AddMovementInput(GetActorRightVector(), Value);
 	}
 }
 
 void AStarRunner2019Character::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	this->AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
 void AStarRunner2019Character::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	this->AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
