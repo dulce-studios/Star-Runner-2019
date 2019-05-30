@@ -13,6 +13,7 @@
 #include "GameFramework/InputSettings.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Math/UnrealMathUtility.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -93,7 +94,7 @@ void AStarRunner2019Character::TurnLeft() {
 void AStarRunner2019Character::TurnRight() {
 	if (IsTurnable) {
 		float turnAngle = 35.0f;
-		this->AddControllerYawInput(turnAngle);
+		this->AddControllerYawInput(turnAngle * BaseTurnRate);
 		this->WentLeft = false;
 	}
 }
