@@ -4,30 +4,40 @@
 
 #include "CoreMinimal.h"
 
-#include "HallwayInterface.h"
-
-#include "Engine/Classes/Components/StaticMeshComponent.h"
-#include "Engine/Classes/Components/BoxComponent.h"
-#include "Engine/Classes/Components/ArrowComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/ArrowComponent.h"
 #include "HallwayJointComponent.generated.h"
 
 UCLASS()
-class STARRUNNER2019_API UHallwayJointComponent : public UStaticMeshComponent, public IHallwayInterface {
+class STARRUNNER2019_API UHallwayJointComponent
+	: public UStaticMeshComponent {
     GENERATED_BODY()
 
 public:
     UHallwayJointComponent();
 
+	UFUNCTION()
+	UArrowComponent* GetLeftArrow();
+
+	UFUNCTION()
+	UArrowComponent* GetRightArrow();
+
+	UFUNCTION()
+	UBoxComponent* GetTriggerBox();
+
 private:
-	UFUNCTION()
-	void SetupTriggerBox();
+	UPROPERTY()
+	UArrowComponent* leftArrow;
 
-	UFUNCTION()
-	void SetupLeftArrowComponent();
+	UPROPERTY()
+	UArrowComponent* rightArrow;
 
-	UFUNCTION()
-	void SetupRightArrowComponent();
+	UPROPERTY()
+	UBoxComponent* triggerBox;
 
-	UFUNCTION()
-	void AttachComponentToAnotherComponent(USceneComponent* Component, USceneComponent* OtherComponent, FTransform ComponentTransform) override;
+	template<class C>
+	void AttachWithTransform(
+		FName componentName,
+		FTransform& componentTransform);
 };
