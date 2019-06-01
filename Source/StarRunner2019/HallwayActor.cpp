@@ -10,6 +10,7 @@
 
 #include <cstdlib> // rand
 #include <ctime> //srand seed
+#include <exception>
 #include <sstream> //wstringstream
 
 // Sets default values
@@ -73,7 +74,7 @@ void AHallwayActor::OnOverlapBegin(
 
 	if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
 		auto* playerCharacter = Cast<AStarRunner2019Character>(OtherActor);
-		playerCharacter->IsTurnable = true;
+		playerCharacter->bIsTurnable = true;
 		//spawn grandchildren before the player turns
 		this->LeftChildHallway->SpawnLeftChildHallway();
 		this->LeftChildHallway->SpawnRightChildHallway();
@@ -89,19 +90,23 @@ void AHallwayActor::OnOverlapEnd(
 	int32 OtherBodyIndex) {
 
 	if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
-		auto* playerCharacter = Cast<AStarRunner2019Character>(OtherActor);
-		playerCharacter->IsTurnable = false;
+		auto* PlayerCharacter = Cast<AStarRunner2019Character>(OtherActor);
+		PlayerCharacter->bIsTurnable = false;
 
-		AHallwayActor* childHallwayToDestroy = nullptr;
-		if (playerCharacter->WentLeft) {
-			childHallwayToDestroy = this->RightChildHallway;
+		AHallwayActor* ChildHallwayToDestroy = nullptr;
+		switch (PlayerCharacter->TurnDirection) {
+		case EDirection::Left:
+			ChildHallwayToDestroy = this->RightChildHallway;
+			break;
+		case EDirection::Right:
+			ChildHallwayToDestroy = this->LeftChildHallway;
+			break;
+		default:
+			throw new std::logic_error("Invalid Turn Direction");
 		}
-		else {
-			childHallwayToDestroy = this->LeftChildHallway;
-		}
-		childHallwayToDestroy->LeftChildHallway->Destroy();
-		childHallwayToDestroy->RightChildHallway->Destroy();
-		childHallwayToDestroy->Destroy();
+		ChildHallwayToDestroy->LeftChildHallway->Destroy();
+		ChildHallwayToDestroy->RightChildHallway->Destroy();
+		ChildHallwayToDestroy->Destroy();
 
 		this->Destroy();
 	}

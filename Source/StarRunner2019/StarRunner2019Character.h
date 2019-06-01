@@ -8,6 +8,13 @@
 
 class UInputComponent;
 
+UENUM()
+enum class EDirection : int8 {
+	None = 0,
+	Left = -1,
+	Right = 1,
+};
+
 UCLASS(config = Game)
 class AStarRunner2019Character : public ACharacter
 {
@@ -21,9 +28,11 @@ public:
 	AStarRunner2019Character();
 
 protected:
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 
 public:
+
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	float BaseTurnRate;
@@ -33,10 +42,13 @@ public:
 	float BaseLookUpRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool IsTurnable;
+	bool bIsTurnable;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsTurning;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool WentLeft;
+	EDirection TurnDirection;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int HallwaysPassedCount;
@@ -47,6 +59,7 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	UCapsuleComponent* CharacterCapsuleComponent;
 
+	FRotator TargetRotation;
 private:
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -54,6 +67,7 @@ private:
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	void Turn(EDirection Direction);
 protected:
 	/** Handles moving forward/backward */
 	void MoveForward(float val);
@@ -84,5 +98,5 @@ protected:
 
 public:
 	/** Returns FirstPersonCameraComponent subobject **/
-	FORCEINLINE class UCameraComponent *GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 };
