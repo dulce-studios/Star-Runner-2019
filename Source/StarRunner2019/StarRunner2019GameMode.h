@@ -3,7 +3,6 @@
 #pragma once
 
 #include "HallwayActor.h"
-#include "HallwayInterface.h"
 #include "StarRunner2019Character.h"
 
 #include "CoreMinimal.h"
@@ -13,15 +12,16 @@
 #include "StarRunner2019GameMode.generated.h"
 
 UCLASS(minimalapi)
-class AStarRunner2019GameMode : public AGameModeBase, public IHallwayInterface
+class AStarRunner2019GameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
 	AStarRunner2019GameMode();
 
-	AHallwayActor* SpawnInitialHallway();
-
- protected:
+protected:
  	virtual void BeginPlay();
+
+private:
+	AHallwayActor* SpawnInitialHallway(FTransform& spawnTransform);
 };

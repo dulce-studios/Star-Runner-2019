@@ -6,160 +6,156 @@
 
 #include "StarRunner2019Character.h"
 
-#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-#include <stdlib.h> // for rand function LOL
-
-#define HALLWAY_COUNT_MIN 1
-#define HALLWAY_COUNT_MAX 5
+#include <cstdlib> // rand
+#include <ctime> //srand seed
+#include <sstream> //wstringstream
 
 // Sets default values
 AHallwayActor::AHallwayActor() {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	/* Set this actor to call Tick() every frame.
+	 * You can turn this off to improve performance if you don't need it.
+	 */
 	PrimaryActorTick.bCanEverTick = true;
 
-	USceneComponent *RootSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
-	this->RootComponent = RootSceneComponent;
+	this->RootComponent = this->CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
+	this->HallwayJointComponent = this->CreateDefaultSubobject<UHallwayJointComponent>(
+		TEXT("HallwayJointComponent"));
+	this->HallwayJointComponent->AttachToComponent(
+		this->RootComponent,
+		FAttachmentTransformRules::KeepRelativeTransform);
 
-	this->Setup();
-}
+	FTransform hallwayTransform(FRotator(0), FVector(0), FVector(1));
 
-void AHallwayActor::Setup() {
-	UHallwayUnitComponent *InitialHallwayUnitComponent = CreateDefaultSubobject<UHallwayUnitComponent>(TEXT("InitialHallwayUnitComponent"));
-	InitialHallwayUnitComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	float xOffset;
+	{ //get hallway extents
+		auto* hallwayComponent =
+			this->CreateDefaultSubobject<UHallwayUnitComponent>(TEXT("TempUnitHallway"));
+		FVector hallwayOrigin;
+		FVector hallwayBoxExtent;
+		float hallwaySphereRadius;
+		UKismetSystemLibrary::GetComponentBounds(
+			hallwayComponent,
+			hallwayOrigin, //outarg
+			hallwayBoxExtent, //outarg
+			hallwaySphereRadius); //outarg
+		//as the mesh is centered, we double the length
+		xOffset = hallwayBoxExtent.X * 2.0f; 
+		hallwayComponent->DestroyComponent();
+	}
 
-	FVector Origin;
-	FVector BoxExtent;
-	float SphereRadius;
-	UKismetSystemLibrary::GetComponentBounds(InitialHallwayUnitComponent, Origin, BoxExtent, SphereRadius);
-	
-	FTransform HallwayUnitComponentsEndTransform = this->AppendHallwayUnitComponents(Origin, BoxExtent, SphereRadius);
-
-	this->HallwayJointComponent = CreateDefaultSubobject<UHallwayJointComponent>(TEXT("HallwayJointComponent"));
-	IHallwayInterface::AttachComponentToAnotherComponent(this->HallwayJointComponent, this->GetRootComponent(), HallwayUnitComponentsEndTransform);
-}
-
-
-FTransform AHallwayActor::AppendHallwayUnitComponents(const FVector Origin, const FVector BoxExtent, const float SphereRadius) {
-	float XLength = (BoxExtent.X * 2.0f);
-
-	FRotator Rotator(0.0f, 0.0f, 0.0f);
-	FVector Translation(XLength, 0.0f, 0.0f);
-	FVector Scale(1.0f, 1.0f, 1.0f);
-
-	int HallwayCount = this->GetRandomNumberInRange(HALLWAY_COUNT_MIN, HALLWAY_COUNT_MAX);
-
-	for (auto i = 1; i < HallwayCount; ++i)
+	std::srand(std::time(nullptr)); //seed rand
+	const int numHallways = 1 + (std::rand() % 5); //[1...5]
+	for (int i = 0; i < numHallways; i++)
 	{
-		UHallwayUnitComponent* NextHallwayUnitComponent = CreateDefaultSubobject<UHallwayUnitComponent>(FName(*FString::Printf(TEXT("HallwayUnitComponent%d"), i)));
-		FTransform HallwayUnitComponentTransform(Rotator, Translation, Scale);
+		std::wstringstream hallwayName(L"HallwayUnitComponent");
+		hallwayName << i;
+		auto* nextHallway = this->CreateDefaultSubobject<UHallwayUnitComponent>(
+			FName(hallwayName.str().c_str()));
 
-		NextHallwayUnitComponent->AttachToComponent(this->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-		NextHallwayUnitComponent->SetRelativeTransform(HallwayUnitComponentTransform);
-
-		Translation.X += XLength;
+		nextHallway->AttachToComponent(
+			this->RootComponent,
+			FAttachmentTransformRules::KeepRelativeTransform);
+		nextHallway->SetRelativeTransform(hallwayTransform);
+		hallwayTransform.AddToTranslation(FVector(xOffset, 0, 0));
 	}
-
-	FTransform HallwayUnitComponentsEndTransform(Rotator, Translation, Scale);
-	
-	return HallwayUnitComponentsEndTransform;
+	this->HallwayJointComponent->SetRelativeTransform(hallwayTransform);
 }
 
-const int AHallwayActor::GetRandomNumberInRange(int LowerBound, int UpperBound) {
-	return rand() % UpperBound + LowerBound;
-}
+void AHallwayActor::OnOverlapBegin(
+	UPrimitiveComponent* OverlapComponent,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex,
+	bool bFromSweep,
+	const FHitResult& SweepResult) {
 
-void AHallwayActor::OnOverlapBegin(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
 	if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
-		AStarRunner2019Character* Character = Cast<AStarRunner2019Character>(OtherActor);
-		Character->IsTurnable = true;
-		this->SpawnGrandChildrenHallways();
+		auto* playerCharacter = Cast<AStarRunner2019Character>(OtherActor);
+		playerCharacter->IsTurnable = true;
+		//spawn grandchildren before the player turns
+		this->LeftChildHallway->SpawnLeftChildHallway();
+		this->LeftChildHallway->SpawnRightChildHallway();
+		this->RightChildHallway->SpawnLeftChildHallway();
+		this->RightChildHallway->SpawnRightChildHallway();
 	}
 }
 
-void AHallwayActor::SpawnGrandChildrenHallways() {
-	this->LeftChildHallway->SpawnLeftChildHallway();
-	this->LeftChildHallway->SpawnRightChildHallway();
-	this->RightChildHallway->SpawnRightChildHallway();
-	this->RightChildHallway->SpawnLeftChildHallway();
-}
+void AHallwayActor::OnOverlapEnd(
+	UPrimitiveComponent* OverlappedComp,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex) {
 
-void AHallwayActor::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
 	if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
-		AStarRunner2019Character* Character = Cast<AStarRunner2019Character>(OtherActor);
-		Character->IsTurnable = false;
+		auto* playerCharacter = Cast<AStarRunner2019Character>(OtherActor);
+		playerCharacter->IsTurnable = false;
 
-		if (Character->WentLeft) {
-			this->DestroyChildHallways(RightChildHallway);
+		AHallwayActor* childHallwayToDestroy = nullptr;
+		if (playerCharacter->WentLeft) {
+			childHallwayToDestroy = this->RightChildHallway;
 		}
 		else {
-			this->DestroyChildHallways(LeftChildHallway);
+			childHallwayToDestroy = this->LeftChildHallway;
 		}
+		childHallwayToDestroy->LeftChildHallway->Destroy();
+		childHallwayToDestroy->RightChildHallway->Destroy();
+		childHallwayToDestroy->Destroy();
 
 		this->Destroy();
 	}
 }
 
-void AHallwayActor::DestroyChildHallways(AHallwayActor* ChildHallway) {
-	ChildHallway->LeftChildHallway->Destroy();
-	ChildHallway->RightChildHallway->Destroy();
-	ChildHallway->Destroy();
-}
-
 void AHallwayActor::SpawnLeftChildHallway() {
-	UArrowComponent* const LeftChildArrowComponent = Cast<UArrowComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("LeftArrowComponent")));
-	FTransform* LeftChildHallwayTransform = GetTransformForComponent(LeftChildArrowComponent);
-	this->LeftChildHallway = this->SpawnChildActor(this, LeftChildHallwayTransform);
+	this->LeftChildHallway = this->SpawnHallFromYawAndOffset(-90, 200);
 }
 
 void AHallwayActor::SpawnRightChildHallway() {
-	UArrowComponent* const RightChildArrowComponent = Cast<UArrowComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("RightArrowComponent")));
-	FTransform* RightChildHallwayTransform = GetTransformForComponent(RightChildArrowComponent);
-	this->RightChildHallway = this->SpawnChildActor(this, RightChildHallwayTransform);
+	this->RightChildHallway = this->SpawnHallFromYawAndOffset(90, 200);
 }
 
-FTransform* AHallwayActor::GetTransformForComponent(USceneComponent* Component) {
-	FTransform ArrowComponentTransform = Component->GetComponentTransform();
+AHallwayActor* AHallwayActor::SpawnHallFromYawAndOffset(
+	float yawDegrees,
+	float rotationAlignedOffset) {
 
-	FVector ArrowComponentLocation = ArrowComponentTransform.GetLocation();
-	FQuat ArrowComponentRotation = ArrowComponentTransform.GetRotation();
-
-	FVector VectorOffset(200, 0, 0);
-	FVector RotationVector = UKismetMathLibrary::Quat_RotateVector(ArrowComponentRotation, VectorOffset);
-
-	FVector ChildHallwayLocation = ArrowComponentLocation + RotationVector;
-	FQuat ChildHallwayRotation = ArrowComponentRotation;
-	FVector ChildHallwayScale = GetActorScale3D();
-
-	FTransform* ChildHallwayTransform = new FTransform(ChildHallwayRotation, ChildHallwayLocation, ChildHallwayScale);
-
-	return ChildHallwayTransform;
-}
-
-AHallwayActor* AHallwayActor::SpawnChildActor(AActor* ParentActor, FTransform* Transform) {
-	UWorld* World = ParentActor->GetWorld();
-
-	if (World) {
-		FActorSpawnParameters Info;
-		Info.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		return World->SpawnActor<AHallwayActor>(AHallwayActor::StaticClass(), *Transform, Info);
-
-	}
-	else {
+	UWorld* World = this->GetWorld();
+	if (!World) {
+		/* This may actually crash UEditor */
 		return nullptr;
 	}
+
+	FTransform childTransform(this->HallwayJointComponent->GetComponentTransform());
+	childTransform.ConcatenateRotation(FQuat(FRotator(0, yawDegrees, 0)));
+	/* Align offset by world rotation */
+	FVector offset = childTransform
+		.GetRotation()
+		.RotateVector(FVector(rotationAlignedOffset, 0, 0));
+	childTransform.AddToTranslation(offset);
+
+	FActorSpawnParameters Info;
+	Info.SpawnCollisionHandlingOverride =
+		ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	return World->SpawnActor<AHallwayActor>(
+		AHallwayActor::StaticClass(),
+		childTransform,
+		Info);
 }
+
 
 // Called when the game starts or when spawned
 void AHallwayActor::BeginPlay() {
 	Super::BeginPlay();
 
-	UBoxComponent* HallwayJointBoxComponent = Cast<UBoxComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("TriggerBox")));
+	UBoxComponent* triggerBox = this->HallwayJointComponent->GetTriggerBox();
 
-	HallwayJointBoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AHallwayActor::OnOverlapBegin);
-	HallwayJointBoxComponent->OnComponentEndOverlap.AddDynamic(this, &AHallwayActor::OnOverlapEnd);
+	triggerBox->OnComponentBeginOverlap.AddDynamic(
+		this,
+		&AHallwayActor::OnOverlapBegin);
+	triggerBox->OnComponentEndOverlap.AddDynamic(
+		this,
+		&AHallwayActor::OnOverlapEnd);
 }
 
 // Called every frame
