@@ -17,14 +17,6 @@ class AStarRunner2019Character : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent *FirstPersonCameraComponent;
 
-	/** Motion controller (right hand) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UMotionControllerComponent *R_MotionController;
-
-	/** Motion controller (left hand) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UMotionControllerComponent *L_MotionController;
-
 public:
 	AStarRunner2019Character();
 
@@ -40,19 +32,31 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	float BaseLookUpRate;
 
-	/** Whether to use motion controller location for aiming. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	uint32 bUsingMotionControllers : 1;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsTurnable;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool WentLeft;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int HallwaysPassedCount;
+
+	UPROPERTY(BlueprintReadWrite)
+	UCharacterMovementComponent* MovementComponent;
+
+	UPROPERTY(BlueprintReadWrite)
+	UCapsuleComponent* CharacterCapsuleComponent;
+
+private:
+	UFUNCTION()
+	void OnOverlapBegin(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 protected:
 	/** Handles moving forward/backward */
-	void MoveForward(float Val);
+	void MoveForward(float val);
 
 	/** Handles stafing movement, left and right */
 	void MoveRight(float Val);
@@ -73,35 +77,10 @@ protected:
 	 */
 	void LookUpAtRate(float Rate);
 
-	struct TouchData
-	{
-		TouchData()
-		{
-			bIsPressed = false;
-			Location = FVector::ZeroVector;
-		}
-		bool bIsPressed;
-		ETouchIndex::Type FingerIndex;
-		FVector Location;
-		bool bMoved;
-	};
-	void BeginTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
-	void EndTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
-	void TouchUpdate(const ETouchIndex::Type FingerIndex, const FVector Location);
-	TouchData TouchItem;
-
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent *InputComponent) override;
 	// End of APawn interface
-
-	/* 
-	 * Configures input for touchscreen devices if there is a valid touch interface for doing so 
-	 *
-	 * @param	InputComponent	The input component pointer to bind controls to
-	 * @returns true if touch controls were enabled.
-	 */
-	bool EnableTouchscreenMovement(UInputComponent *InputComponent);
 
 public:
 	/** Returns FirstPersonCameraComponent subobject **/
