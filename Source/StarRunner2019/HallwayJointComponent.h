@@ -18,26 +18,9 @@ public:
     UHallwayJointComponent();
 
 	UFUNCTION()
-	UArrowComponent* GetLeftArrow();
-
-	UFUNCTION()
-	UArrowComponent* GetRightArrow();
-
-	UFUNCTION()
 	UBoxComponent* GetTriggerBox();
 
 private:
 	UPROPERTY()
-	UArrowComponent* leftArrow;
-
-	UPROPERTY()
-	UArrowComponent* rightArrow;
-
-	UPROPERTY()
 	UBoxComponent* triggerBox;
-
-	template<class C>
-	void AttachWithTransform(
-		FName componentName,
-		FTransform& componentTransform);
 };

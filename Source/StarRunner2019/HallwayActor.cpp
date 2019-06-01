@@ -6,7 +6,6 @@
 
 #include "StarRunner2019Character.h"
 
-#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 #include <cstdlib> // rand
@@ -28,7 +27,6 @@ AHallwayActor::AHallwayActor() {
 		FAttachmentTransformRules::KeepRelativeTransform);
 
 	FTransform hallwayTransform(FRotator(0), FVector(0), FVector(1));
-	std::srand(std::time(nullptr)); //seed rand
 
 	float xOffset;
 	{ //get hallway extents
@@ -46,6 +44,8 @@ AHallwayActor::AHallwayActor() {
 		xOffset = hallwayBoxExtent.X * 2.0f; 
 		hallwayComponent->DestroyComponent();
 	}
+
+	std::srand(std::time(nullptr)); //seed rand
 	const int numHallways = 1 + (std::rand() % 5); //[1...5]
 	for (int i = 0; i < numHallways; i++)
 	{
@@ -108,35 +108,39 @@ void AHallwayActor::OnOverlapEnd(
 }
 
 void AHallwayActor::SpawnLeftChildHallway() {
-	UArrowComponent *leftArrow = this->HallwayJointComponent->GetLeftArrow();
-	FTransform leftChildTransform(leftArrow->GetComponentTransform());
-
-	leftChildTransform.AddToTranslation(FVector(200, 0, 0)); //alignment constant
-
-	this->LeftChildHallway = this->SpawnChildActor(leftChildTransform);
+	this->LeftChildHallway = this->SpawnHallFromYawAndOffset(-90, 200);
 }
 
 void AHallwayActor::SpawnRightChildHallway() {
-	UArrowComponent *rightArrow = this->HallwayJointComponent->GetRightArrow();
-	FTransform rightChildTransform(rightArrow->GetComponentTransform());
-
-	rightChildTransform.AddToTranslation(FVector(200, 0, 0)); //alignment constant
-
-	this->RightChildHallway = this->SpawnChildActor(rightChildTransform);
+	this->RightChildHallway = this->SpawnHallFromYawAndOffset(90, 200);
 }
 
+AHallwayActor* AHallwayActor::SpawnHallFromYawAndOffset(
+	float yawDegrees,
+	float rotationAlignedOffset) {
 
-AHallwayActor* AHallwayActor::SpawnChildActor(FTransform& Transform) {
 	UWorld* World = this->GetWorld();
 	if (!World) {
 		/* This may actually crash UEditor */
 		return nullptr;
 	}
 
-	FActorSpawnParameters Info;
-	Info.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	FTransform childTransform(this->HallwayJointComponent->GetComponentTransform());
+	childTransform.ConcatenateRotation(FQuat(FRotator(0, yawDegrees, 0)));
+	/* Align offset by world rotation */
+	FVector offset = childTransform
+		.GetRotation()
+		.RotateVector(FVector(rotationAlignedOffset, 0, 0));
+	childTransform.AddToTranslation(offset);
 
-	return World->SpawnActor<AHallwayActor>(AHallwayActor::StaticClass(), Transform, Info);
+	FActorSpawnParameters Info;
+	Info.SpawnCollisionHandlingOverride =
+		ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	return World->SpawnActor<AHallwayActor>(
+		AHallwayActor::StaticClass(),
+		childTransform,
+		Info);
 }
 
 

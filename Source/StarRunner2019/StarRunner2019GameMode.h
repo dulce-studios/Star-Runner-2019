@@ -19,8 +19,9 @@ class AStarRunner2019GameMode : public AGameModeBase
 public:
 	AStarRunner2019GameMode();
 
-	AHallwayActor* SpawnInitialHallway();
-
- protected:
+protected:
  	virtual void BeginPlay();
+
+private:
+	AHallwayActor* SpawnInitialHallway(FTransform& spawnTransform);
 };

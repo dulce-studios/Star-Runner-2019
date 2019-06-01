@@ -20,7 +20,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION()
 	void SpawnLeftChildHallway();
+
+	UFUNCTION()
 	void SpawnRightChildHallway();
 protected:
 	// Called when the game starts or when spawned
@@ -53,5 +56,7 @@ private:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
 	
-	AHallwayActor* SpawnChildActor(FTransform& Transform);
+	AHallwayActor* SpawnHallFromYawAndOffset(
+		float yawDegrees,
+		float rotationAlignedOffset);
 };
