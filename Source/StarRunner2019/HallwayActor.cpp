@@ -7,7 +7,7 @@
 #include "StarRunner2019Character.h"
 
 #include "Kismet/KismetMathLibrary.h"
-#include "Engine/Classes/Kismet/KismetSystemLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 #include <stdlib.h> // for rand function LOL
 

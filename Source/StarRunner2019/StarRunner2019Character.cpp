@@ -1,7 +1,11 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "StarRunner2019Character.h"
+#include "HallwayActor.h"
+
+#include "Components/BoxComponent.h"
 #include "Engine/EngineBaseTypes.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -9,10 +13,12 @@
 #include "GameFramework/InputSettings.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
-#include "MotionControllerComponent.h"
-#include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
+#include "Math/UnrealMathUtility.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
+
+#define BASE_SPEED 500.0f
+#define MAX_SPEED 1500.0f
 
 //////////////////////////////////////////////////////////////////////////
 // AStarRunner2019Character
@@ -20,26 +26,34 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 AStarRunner2019Character::AStarRunner2019Character()
 {
 	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+	this->CharacterCapsuleComponent =  GetCapsuleComponent();
+	this->CharacterCapsuleComponent->InitCapsuleSize(55.f, 96.0f);
 
-	IsTurnable = false;
-	WentLeft = NULL;
+	this->IsTurnable = false;
+	this->WentLeft = false;
+	this->HallwaysPassedCount = 0;
+
+	this->MovementComponent = this->GetCharacterMovement();
+	this->MovementComponent->MaxWalkSpeed = BASE_SPEED;
 
 	// set our turn rates for input
-	BaseTurnRate = 45.f;
-	BaseLookUpRate = 45.f;
+	this->BaseTurnRate = 45.f;
+	this->BaseLookUpRate = 45.f;
 
 	// Create a CameraComponent
-	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
-	FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 0.0f); // Position the camera
-	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+	this->FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	this->FirstPersonCameraComponent->SetupAttachment(this->CharacterCapsuleComponent);
+	this->FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 0.0f); // Position the camera
+	this->FirstPersonCameraComponent->bUsePawnControlRotation = true;
 }
 
 void AStarRunner2019Character::BeginPlay()
 {
 	// Call the base class
 	Super::BeginPlay();
+
+	this->CharacterCapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AStarRunner2019Character::OnOverlapBegin);
+	this->CharacterCapsuleComponent->OnComponentEndOverlap.AddDynamic(this, &AStarRunner2019Character::OnOverlapEnd);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -72,26 +86,21 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent *
 void AStarRunner2019Character::TurnLeft() {
 	if (IsTurnable) {
 		float turnAngle = -35.0f;
-		AddControllerYawInput(turnAngle);
-		WentLeft = true;
+		this->AddControllerYawInput(turnAngle);
+		this->WentLeft = true;
 	}
 }
 
 void AStarRunner2019Character::TurnRight() {
 	if (IsTurnable) {
 		float turnAngle = 35.0f;
-		AddControllerYawInput(turnAngle);
-		WentLeft = false;
+		this->AddControllerYawInput(turnAngle * BaseTurnRate);
+		this->WentLeft = false;
 	}
 }
 
-void AStarRunner2019Character::MoveForward(float Value)
-{
-	if (Value != 0.0f)
-	{
-		// add movement in that direction
-		AddMovementInput(GetActorForwardVector(), Value);
-	}
+void AStarRunner2019Character::MoveForward(float Value) {
+	this->AddMovementInput(GetActorForwardVector(), 1.0f);
 }
 
 void AStarRunner2019Character::MoveRight(float Value)
@@ -99,18 +108,36 @@ void AStarRunner2019Character::MoveRight(float Value)
 	if (Value != 0.0f)
 	{
 		// add movement in that direction
-		AddMovementInput(GetActorRightVector(), Value);
+		this->AddMovementInput(GetActorRightVector(), Value);
 	}
 }
 
 void AStarRunner2019Character::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	this->AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
 void AStarRunner2019Character::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	this->AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void AStarRunner2019Character::OnOverlapBegin(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
+}
+
+void AStarRunner2019Character::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
+	if (OtherActor->IsA(AHallwayActor::StaticClass())) {
+		AHallwayActor* HallwayActor = Cast<AHallwayActor>(OtherActor);
+		UHallwayJointComponent* HallwayJointComponent = Cast<UHallwayJointComponent>(HallwayActor->GetDefaultSubobjectByName(TEXT("HallwayJointComponent")));
+
+		UBoxComponent* HallwayJointBoxComponent = Cast<UBoxComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("TriggerBox")));
+
+		if (HallwayJointBoxComponent == OtherComp) {
+			++this->HallwaysPassedCount;
+
+			if (this->HallwaysPassedCount % 5 == 0 && this->MovementComponent->GetMaxSpeed() <= MAX_SPEED) this->MovementComponent->MaxWalkSpeed += 50;
+		}
+	}
 }
