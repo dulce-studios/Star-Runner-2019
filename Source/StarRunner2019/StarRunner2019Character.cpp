@@ -3,22 +3,25 @@
 #include "StarRunner2019Character.h"
 #include "HallwayActor.h"
 
-#include "Components/BoxComponent.h"
-#include "Engine/EngineBaseTypes.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "Engine/EngineBaseTypes.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/InputSettings.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Math/NumericLimits.h"
 #include "Math/UnrealMathUtility.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
-#define BASE_SPEED 500.0f
-#define MAX_SPEED 1500.0f
+//TODO Use Enum to model left/right turn for this and hallways
+
+constexpr float BASE_SPEED = 500;
+constexpr float MAX_SPEED = 1500;
 
 //////////////////////////////////////////////////////////////////////////
 // AStarRunner2019Character
@@ -26,13 +29,14 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 AStarRunner2019Character::AStarRunner2019Character()
 {
 	// Set size for collision capsule
-	this->CharacterCapsuleComponent =  GetCapsuleComponent();
+	this->CharacterCapsuleComponent = GetCapsuleComponent();
 	this->CharacterCapsuleComponent->InitCapsuleSize(55.f, 96.0f);
 
-	this->IsTurnable = false;
-	this->WentLeft = false;
+	this->bIsTurnable = false;
 	this->HallwaysPassedCount = 0;
 
+	this->bIsTurning = false;
+	this->TurnDirection = EDirection::None;
 	this->MovementComponent = this->GetCharacterMovement();
 	this->MovementComponent->MaxWalkSpeed = BASE_SPEED;
 
@@ -59,7 +63,7 @@ void AStarRunner2019Character::BeginPlay()
 //////////////////////////////////////////////////////////////////////////
 // Input
 
-void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent)
+void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// set up gameplay key bindings
 	check(PlayerInputComponent);
@@ -77,35 +81,51 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent *
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AStarRunner2019Character::LookUpAtRate);
 
 	PlayerInputComponent->BindAction("TurnLeft", IE_Pressed, this, &AStarRunner2019Character::TurnLeft);
-	PlayerInputComponent->BindAction("TurnLeft", IE_Released , this, &AStarRunner2019Character::TurnLeft);
+	PlayerInputComponent->BindAction("TurnLeft", IE_Released, this, &AStarRunner2019Character::TurnLeft);
 
 	PlayerInputComponent->BindAction("TurnRight", IE_Pressed, this, &AStarRunner2019Character::TurnRight);
 	PlayerInputComponent->BindAction("TurnRight", IE_Released, this, &AStarRunner2019Character::TurnRight);
 }
 
 void AStarRunner2019Character::TurnLeft() {
-	if (IsTurnable) {
-		float turnAngle = -35.0f;
-		this->AddControllerYawInput(turnAngle);
-		this->WentLeft = true;
-	}
+	this->Turn(EDirection::Left);
 }
 
 void AStarRunner2019Character::TurnRight() {
-	if (IsTurnable) {
-		float turnAngle = 35.0f;
-		this->AddControllerYawInput(turnAngle * BaseTurnRate);
-		this->WentLeft = false;
+	this->Turn(EDirection::Right);
+}
+
+void AStarRunner2019Character::Tick(float DeltaSeconds) {
+	if (this->bIsTurning) {
+		const int32 PlayerIndex = 0;
+		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(
+			this->GetWorld(), PlayerIndex);
+		const FRotator CurrentRotation = this->GetActorRotation();
+
+		const float RotationEqualityTolerance = 0.12;
+		if (CurrentRotation.Equals(this->TargetRotation, RotationEqualityTolerance)) {
+			PlayerController->SetControlRotation(this->TargetRotation);
+			this->bIsTurning = false;
+		}
+		else {
+			const float InterpSpeed = 8;
+			PlayerController->SetControlRotation(FMath::RInterpTo(
+				CurrentRotation,
+				this->TargetRotation,
+				DeltaSeconds,
+				InterpSpeed));
+		}
 	}
 }
 
 void AStarRunner2019Character::MoveForward(float Value) {
-	this->AddMovementInput(GetActorForwardVector(), 1.0f);
+	const float InputOverride = 1;
+	this->AddMovementInput(this->GetActorForwardVector(), InputOverride);
 }
 
 void AStarRunner2019Character::MoveRight(float Value)
 {
-	if (Value != 0.0f)
+	if (Value != 0)
 	{
 		// add movement in that direction
 		this->AddMovementInput(GetActorRightVector(), Value);
@@ -139,5 +159,17 @@ void AStarRunner2019Character::OnOverlapEnd(UPrimitiveComponent* OverlappedComp,
 
 			if (this->HallwaysPassedCount % 5 == 0 && this->MovementComponent->GetMaxSpeed() <= MAX_SPEED) this->MovementComponent->MaxWalkSpeed += 50;
 		}
+	}
+}
+
+void AStarRunner2019Character::Turn(EDirection Direction)
+{
+	if (this->bIsTurnable) {
+		this->TargetRotation = FRotator(this->GetActorRotation());
+		this->TargetRotation.Yaw += static_cast<float>(Direction) * 90;
+
+		this->bIsTurning = true;
+		this->bIsTurnable = false;
+		this->TurnDirection = Direction;
 	}
 }
