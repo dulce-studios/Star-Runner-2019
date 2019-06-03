@@ -21,6 +21,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 //TODO Use Enum to model left/right turn for this and hallways
 
 constexpr float BASE_SPEED = 500;
+constexpr float SPEED_STEP = 50;
 constexpr float MAX_SPEED = 1500;
 
 //////////////////////////////////////////////////////////////////////////
@@ -56,7 +57,6 @@ void AStarRunner2019Character::BeginPlay()
 	// Call the base class
 	Super::BeginPlay();
 
-	this->CharacterCapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AStarRunner2019Character::OnOverlapBegin);
 	this->CharacterCapsuleComponent->OnComponentEndOverlap.AddDynamic(this, &AStarRunner2019Character::OnOverlapEnd);
 }
 
@@ -97,9 +97,7 @@ void AStarRunner2019Character::TurnRight() {
 
 void AStarRunner2019Character::Tick(float DeltaSeconds) {
 	if (this->bIsTurning) {
-		const int32 PlayerIndex = 0;
-		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(
-			this->GetWorld(), PlayerIndex);
+		AController* PlayerController = this->GetController();
 		const FRotator CurrentRotation = this->GetActorRotation();
 
 		const float RotationEqualityTolerance = 0.12;
@@ -144,20 +142,30 @@ void AStarRunner2019Character::LookUpAtRate(float Rate)
 	this->AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-void AStarRunner2019Character::OnOverlapBegin(UPrimitiveComponent* OverlapComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
-}
+void AStarRunner2019Character::OnOverlapEnd(
+	UPrimitiveComponent* OverlappedComp,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex)
+{
+	if (OtherActor->IsA(AHallwayActor::StaticClass()))
+	{
+		auto* HallwayActor = Cast<AHallwayActor>(OtherActor);
+		auto* HallwayTriggerBox = HallwayActor->GetHallwayJointComponent()->GetTriggerBox();
 
-void AStarRunner2019Character::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
-	if (OtherActor->IsA(AHallwayActor::StaticClass())) {
-		AHallwayActor* HallwayActor = Cast<AHallwayActor>(OtherActor);
-		UHallwayJointComponent* HallwayJointComponent = Cast<UHallwayJointComponent>(HallwayActor->GetDefaultSubobjectByName(TEXT("HallwayJointComponent")));
-
-		UBoxComponent* HallwayJointBoxComponent = Cast<UBoxComponent>(HallwayJointComponent->GetDefaultSubobjectByName(TEXT("TriggerBox")));
-
-		if (HallwayJointBoxComponent == OtherComp) {
+		if (HallwayTriggerBox == OtherComp)
+		{
 			++this->HallwaysPassedCount;
+			
+			const bool bAtSpeedStep = this->HallwaysPassedCount % 5 == 0;
+			const bool bAtMaxSpeed = this->MovementComponent->MaxWalkSpeed >= MAX_SPEED;
+			if (bAtSpeedStep && bAtMaxSpeed)
+			{
+				this->MovementComponent->MaxWalkSpeed += SPEED_STEP;
 
-			if (this->HallwaysPassedCount % 5 == 0 && this->MovementComponent->GetMaxSpeed() <= MAX_SPEED) this->MovementComponent->MaxWalkSpeed += 50;
+				auto* PlayerController = Cast<APlayerController>(this->GetController());
+				AHUD* PlayerHUD = PlayerController->GetHUD();
+			}
 		}
 	}
 }
