@@ -24,4 +24,5 @@ protected:
 
 private:
 	AHallwayActor* SpawnInitialHallway(FTransform& spawnTransform);
+
 };
