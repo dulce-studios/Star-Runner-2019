@@ -14,7 +14,8 @@
 #include <sstream> //wstringstream
 
 // Sets default values
-AHallwayActor::AHallwayActor() {
+AHallwayActor::AHallwayActor()
+{
 	/* Set this actor to call Tick() every frame.
 	 * You can turn this off to improve performance if you don't need it.
 	 */
@@ -118,6 +119,11 @@ void AHallwayActor::SpawnLeftChildHallway() {
 
 void AHallwayActor::SpawnRightChildHallway() {
 	this->RightChildHallway = this->SpawnHallFromYawAndOffset(90, 200);
+}
+
+UHallwayJointComponent* AHallwayActor::GetHallwayJointComponent()
+{
+	return this->HallwayJointComponent;
 }
 
 AHallwayActor* AHallwayActor::SpawnHallFromYawAndOffset(

@@ -25,6 +25,8 @@ public:
 
 	UFUNCTION()
 	void SpawnRightChildHallway();
+
+	UHallwayJointComponent* GetHallwayJointComponent();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
