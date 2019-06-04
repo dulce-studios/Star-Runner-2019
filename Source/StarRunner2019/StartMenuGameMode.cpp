@@ -1,9 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// Copyright 2019 Dulce Studios. All Rights Reserved.
 
 #include "StartMenuGameMode.h"
 #include "StarRunner2019HUD.h"
 
-AStartMenuGameMode::AStartMenuGameMode() {
+AStartMenuGameMode::AStartMenuGameMode() 
+{
 	this->HUDClass = AStarRunner2019HUD::StaticClass();
 }
