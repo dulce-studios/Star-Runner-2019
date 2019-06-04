@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Dulce Studios. All Rights Reserved.
 
 #pragma once
 
@@ -10,9 +10,6 @@
 
 #include "StarRunner2019HUD.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class STARRUNNER2019_API AStarRunner2019HUD : public AHUD
 {

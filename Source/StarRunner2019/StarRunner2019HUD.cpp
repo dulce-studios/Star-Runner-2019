@@ -1,8 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// Copyright 2019 Dulce Studios. All Rights Reserved.
 
 #include "StarRunner2019HUD.h"
 
+#include "Blueprint/WidgetTree.h"
+#include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 
 #include "Components/Button.h"
@@ -16,7 +17,16 @@ AStarRunner2019HUD::AStarRunner2019HUD()
 
 void AStarRunner2019HUD::StartButtonClicked() 
 {
-	UE_LOG(LogTemp, Warning, TEXT("YEEEEEAAAAAH"));
+	this->StartMenu->RemoveFromParent();
+
+	const UWorld* World = this->GetWorld();
+	FName LevelName = TEXT("StarRunnerMap");
+
+	UGameplayStatics::OpenLevel
+	(
+		World,
+		LevelName
+	);
 }
 
 void AStarRunner2019HUD::BeginPlay() 
