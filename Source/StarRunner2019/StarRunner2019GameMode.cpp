@@ -24,13 +24,13 @@ AHallwayActor* AStarRunner2019GameMode::SpawnInitialHallway(FTransform& spawnTra
 void AStarRunner2019GameMode::BeginPlay()
 {
 	// Based on https://answers.unrealengine.com/questions/337711/getworldtransform-for-scenecomponent-in-c.html
-	AController* playerController = this->DefaultPawnClass.GetDefaultObject()->GetController();
-	AActor* playerStart = this->FindPlayerStart(playerController, FString());
-	FTransform spawnTransform(playerStart->GetRootComponent()->GetComponentTransform());
-	spawnTransform.AddToTranslation(FVector(0, 0, -120));
-	spawnTransform.SetScale3D(FVector(50));
+	AController* PlayerController = this->DefaultPawnClass.GetDefaultObject()->GetController();
+	AActor* PlayerStart = this->FindPlayerStart(PlayerController, FString());
+	FTransform SpawnTransform(PlayerStart->GetRootComponent()->GetComponentTransform());
+	SpawnTransform.AddToTranslation(FVector(0, 0, -120));
+	SpawnTransform.SetScale3D(FVector(50));
 
-	AHallwayActor* initialHallway = this->SpawnInitialHallway(spawnTransform);
-	initialHallway->SpawnLeftChildHallway();
-	initialHallway->SpawnRightChildHallway();
+	AHallwayActor* InitialHallway = this->SpawnInitialHallway(SpawnTransform);
+	InitialHallway->SpawnLeftChildHallway();
+	InitialHallway->SpawnRightChildHallway();
 }

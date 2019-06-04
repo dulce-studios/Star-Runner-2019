@@ -41,8 +41,6 @@ protected:
 	AHallwayActor* RightChildHallway;
 
 private:
-	void Setup();
-
 	UFUNCTION()
 	void OnOverlapBegin(
 		UPrimitiveComponent* OverlapComponent,

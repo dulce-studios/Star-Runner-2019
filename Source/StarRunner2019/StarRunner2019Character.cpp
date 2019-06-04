@@ -11,7 +11,6 @@
 #include "Engine/EngineBaseTypes.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/InputSettings.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Math/NumericLimits.h"
 #include "Math/UnrealMathUtility.h"
@@ -46,7 +45,7 @@ AStarRunner2019Character::AStarRunner2019Character()
 	this->BaseLookUpRate = 45.f;
 
 	// Create a CameraComponent
-	this->FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	this->FirstPersonCameraComponent = this->CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	this->FirstPersonCameraComponent->SetupAttachment(this->CharacterCapsuleComponent);
 	this->FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 0.0f); // Position the camera
 	this->FirstPersonCameraComponent->bUsePawnControlRotation = true;
@@ -57,7 +56,9 @@ void AStarRunner2019Character::BeginPlay()
 	// Call the base class
 	Super::BeginPlay();
 
-	this->CharacterCapsuleComponent->OnComponentEndOverlap.AddDynamic(this, &AStarRunner2019Character::OnOverlapEnd);
+	this->CharacterCapsuleComponent->OnComponentEndOverlap.AddDynamic(
+		this,
+		&AStarRunner2019Character::OnOverlapEnd);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -100,8 +101,8 @@ void AStarRunner2019Character::Tick(float DeltaSeconds) {
 		AController* PlayerController = this->GetController();
 		const FRotator CurrentRotation = this->GetActorRotation();
 
-		const float RotationEqualityTolerance = 0.12;
-		if (CurrentRotation.Equals(this->TargetRotation, RotationEqualityTolerance)) {
+		const float RInterpStopTolerance = 0.12;
+		if (CurrentRotation.Equals(this->TargetRotation, RInterpStopTolerance)) {
 			PlayerController->SetControlRotation(this->TargetRotation);
 			this->bIsTurning = false;
 		}
@@ -126,20 +127,22 @@ void AStarRunner2019Character::MoveRight(float Value)
 	if (Value != 0)
 	{
 		// add movement in that direction
-		this->AddMovementInput(GetActorRightVector(), Value);
+		this->AddMovementInput(this->GetActorRightVector(), Value);
 	}
 }
 
 void AStarRunner2019Character::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
-	this->AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	const float SecondsPerFrame = this->GetWorld()->GetDeltaSeconds();
+	this->AddControllerYawInput(Rate * this->BaseTurnRate * SecondsPerFrame);
 }
 
 void AStarRunner2019Character::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
-	this->AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	const float SecondsPerFrame = this->GetWorld()->GetDeltaSeconds();
+	this->AddControllerPitchInput(Rate * this->BaseLookUpRate * SecondsPerFrame);
 }
 
 void AStarRunner2019Character::OnOverlapEnd(
@@ -159,12 +162,9 @@ void AStarRunner2019Character::OnOverlapEnd(
 			
 			const bool bAtSpeedStep = this->HallwaysPassedCount % 5 == 0;
 			const bool bAtMaxSpeed = this->MovementComponent->MaxWalkSpeed >= MAX_SPEED;
-			if (bAtSpeedStep && bAtMaxSpeed)
+			if (bAtSpeedStep && !bAtMaxSpeed)
 			{
 				this->MovementComponent->MaxWalkSpeed += SPEED_STEP;
-
-				auto* PlayerController = Cast<APlayerController>(this->GetController());
-				AHUD* PlayerHUD = PlayerController->GetHUD();
 			}
 		}
 	}

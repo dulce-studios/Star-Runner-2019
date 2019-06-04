@@ -10,29 +10,30 @@
 
 AStarRunner2019HUD::AStarRunner2019HUD() 
 {
-	static ConstructorHelpers::FClassFinder<UStartMenuWidget> StartMenuWidget(TEXT("/Game/Blueprints/StartMenuWidget"));
+	static ConstructorHelpers::FClassFinder<UStartMenuWidget> StartMenuWidget(
+		TEXT("/Game/Blueprints/StartMenuWidget"));
 
-	this->StartMenu = CreateWidget<UStartMenuWidget>(this->GetWorld(), StartMenuWidget.Class);
+	this->StartMenu = CreateWidget<UStartMenuWidget>(
+		this->GetWorld(),
+		StartMenuWidget.Class);
 }
 
 void AStarRunner2019HUD::StartButtonClicked() 
 {
 	this->StartMenu->RemoveFromParent();
 
-	const UWorld* World = this->GetWorld();
-	FName LevelName = TEXT("StarRunnerMap");
-
-	UGameplayStatics::OpenLevel
-	(
-		World,
-		LevelName
-	);
+	FName NextLevelName = TEXT("StarRunnerMap");
+	UGameplayStatics::OpenLevel(
+		this->GetWorld(),
+		NextLevelName);
 }
 
 void AStarRunner2019HUD::BeginPlay() 
 {
 	UButton* StartGameButton = this->StartMenu->StartGameButton;
-	StartGameButton->OnClicked.AddDynamic(this, &AStarRunner2019HUD::StartButtonClicked);
+	StartGameButton->OnClicked.AddDynamic(
+		this,
+		&AStarRunner2019HUD::StartButtonClicked);
 	this->StartMenu->AddToViewport();
 	this->PlayerOwner->bShowMouseCursor = true;
 }
