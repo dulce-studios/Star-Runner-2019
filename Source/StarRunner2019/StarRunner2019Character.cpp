@@ -2,6 +2,7 @@
 
 #include "StarRunner2019Character.h"
 #include "HallwayActor.h"
+#include "StarRunner2019HUD.h"
 
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -165,6 +166,13 @@ void AStarRunner2019Character::OnOverlapEnd(
 			if (bAtSpeedStep && !bAtMaxSpeed)
 			{
 				this->MovementComponent->MaxWalkSpeed += SPEED_STEP;
+
+				AStarRunner2019HUD* StarRunnerHUD
+					= Cast<AStarRunner2019HUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD());
+
+				float SpeedPercentage = this->MovementComponent->MaxWalkSpeed / MAX_SPEED;
+				StarRunnerHUD->SetSpeedBar(SpeedPercentage);
+
 			}
 		}
 	}
