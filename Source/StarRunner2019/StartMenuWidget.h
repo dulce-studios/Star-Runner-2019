@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Dulce Studios. All Rights Reserved.
 
 #pragma once
 
@@ -8,9 +8,6 @@
 #include "Blueprint/UserWidget.h"
 #include "StartMenuWidget.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class STARRUNNER2019_API UStartMenuWidget : public UUserWidget
 {
