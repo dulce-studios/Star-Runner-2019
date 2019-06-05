@@ -4,10 +4,9 @@
 
 #include "CoreMinimal.h"
 
-#include "Blueprint/UserWidget.h"
-#include "GameFramework/HUD.h"
-#include "StartMenuWidget.h"
+#include "StarRunner2019Widget.h"
 
+#include "GameFramework/HUD.h"
 #include "StarRunner2019HUD.generated.h"
 
 UCLASS()
@@ -21,9 +20,9 @@ public:
 	UFUNCTION()
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-	void StartButtonClicked();
+	void SetSpeedBar(float SpeedPercentage);
+
 private:
 	UPROPERTY()
-	UStartMenuWidget* StartMenu;
+	UStarRunner2019Widget* StarRunnerWidget;
 };

@@ -1,10 +1,12 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "StarRunner2019GameMode.h"
+#include "StarRunner2019HUD.h"
 
 AStarRunner2019GameMode::AStarRunner2019GameMode()
 {
 	this->DefaultPawnClass = AStarRunner2019Character::StaticClass();
+	this->HUDClass = AStarRunner2019HUD::StaticClass();
 }
 
 AHallwayActor* AStarRunner2019GameMode::SpawnInitialHallway(FTransform& spawnTransform)

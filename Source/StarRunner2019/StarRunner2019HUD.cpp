@@ -2,38 +2,26 @@
 
 #include "StarRunner2019HUD.h"
 
-#include "Blueprint/WidgetTree.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 
-#include "Components/Button.h"
-
 AStarRunner2019HUD::AStarRunner2019HUD() 
 {
-	static ConstructorHelpers::FClassFinder<UStartMenuWidget> StartMenuWidget(
-		TEXT("/Game/Blueprints/StartMenuWidget"));
+	static ConstructorHelpers::FClassFinder<UStarRunner2019Widget> StarRunnerWidget(
+		TEXT("/Game/Blueprints/StarRunner2019Widget"));
 
-	this->StartMenu = CreateWidget<UStartMenuWidget>(
+	this->StarRunnerWidget = CreateWidget<UStarRunner2019Widget>(
 		this->GetWorld(),
-		StartMenuWidget.Class);
-}
-
-void AStarRunner2019HUD::StartButtonClicked() 
-{
-	this->StartMenu->RemoveFromParent();
-
-	FName NextLevelName = TEXT("StarRunnerMap");
-	UGameplayStatics::OpenLevel(
-		this->GetWorld(),
-		NextLevelName);
+		StarRunnerWidget.Class);
 }
 
 void AStarRunner2019HUD::BeginPlay() 
 {
-	UButton* StartGameButton = this->StartMenu->StartGameButton;
-	StartGameButton->OnClicked.AddDynamic(
-		this,
-		&AStarRunner2019HUD::StartButtonClicked);
-	this->StartMenu->AddToViewport();
-	this->PlayerOwner->bShowMouseCursor = true;
+	UProgressBar* SpeedBar = this->StarRunnerWidget->SpeedBar;
+	this->StarRunnerWidget->AddToViewport();
+}
+
+void AStarRunner2019HUD::SetSpeedBar(float SpeedPercentage)
+{
+	this->StarRunnerWidget->SpeedBar->SetPercent(SpeedPercentage);
 }
