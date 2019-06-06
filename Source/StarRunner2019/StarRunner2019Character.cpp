@@ -6,6 +6,7 @@
 
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
+#include <cmath>
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -40,6 +41,8 @@ AStarRunner2019Character::AStarRunner2019Character()
 	this->TurnDirection = EDirection::None;
 	this->MovementComponent = this->GetCharacterMovement();
 	this->MovementComponent->MaxWalkSpeed = BASE_SPEED;
+
+	this->TimeElapsed = 0;
 
 	// set our turn rates for input
 	this->BaseTurnRate = 45.f;
@@ -98,6 +101,14 @@ void AStarRunner2019Character::TurnRight() {
 }
 
 void AStarRunner2019Character::Tick(float DeltaSeconds) {
+	this->TimeElapsed += DeltaSeconds;
+	UE_LOG(LogTemp, Warning, TEXT("HEEE %f"), this->TimeElapsed);
+
+	AStarRunner2019HUD* StarRunnerHUD
+		= Cast<AStarRunner2019HUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD());
+
+	StarRunnerHUD->SetElapsedTime(this->TimeElapsed);
+
 	if (this->bIsTurning) {
 		AController* PlayerController = this->GetController();
 		const FRotator CurrentRotation = this->GetActorRotation();

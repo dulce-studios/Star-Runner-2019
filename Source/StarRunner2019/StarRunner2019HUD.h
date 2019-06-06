@@ -22,6 +22,8 @@ public:
 
 	void SetSpeedBar(float SpeedPercentage);
 
+	void SetElapsedTime(float ElapsedSeconds);
+
 private:
 	UPROPERTY()
 	UStarRunner2019Widget* StarRunnerWidget;

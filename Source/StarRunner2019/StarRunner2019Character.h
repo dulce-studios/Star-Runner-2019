@@ -60,6 +60,9 @@ public:
 	UCapsuleComponent* CharacterCapsuleComponent;
 
 	FRotator TargetRotation;
+
+	float TimeElapsed;
+
 private:
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp,

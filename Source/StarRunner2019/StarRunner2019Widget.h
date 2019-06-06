@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 
 #include "Components/ProgressBar.h"
+#include "Components/TextBlock.h"
 #include "Blueprint/UserWidget.h"
 #include "StarRunner2019Widget.generated.h"
 
@@ -16,4 +17,7 @@ class STARRUNNER2019_API UStarRunner2019Widget : public UUserWidget
 public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UProgressBar* SpeedBar;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* ElapsedTime;
 };
