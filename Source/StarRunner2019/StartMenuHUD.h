@@ -16,10 +16,10 @@ public:
 	AStartMenuHUD();
 
 	UFUNCTION()
-		virtual void BeginPlay() override;
+	virtual void BeginPlay() override;
 
 	UFUNCTION()
-		void StartButtonClicked();
+	void StartButtonClicked();
 private:
 	UPROPERTY()
 	UStartMenuWidget* StartMenu;
