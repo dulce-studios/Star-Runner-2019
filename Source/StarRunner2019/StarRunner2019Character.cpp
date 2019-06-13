@@ -125,7 +125,7 @@ void AStarRunner2019Character::Tick(float DeltaSeconds)
 		AController* PlayerController = this->GetController();
 		const FRotator CurrentRotation = this->GetActorRotation();
 
-		const float RInterpStopTolerance = 1;
+		const float RInterpStopTolerance = 0.12;
 		if (CurrentRotation.Equals(this->TargetRotation, RInterpStopTolerance))
 		{
 			PlayerController->SetControlRotation(this->TargetRotation);
