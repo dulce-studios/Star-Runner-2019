@@ -11,6 +11,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Engine/EngineBaseTypes.h"
+#include "Public/TimerManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/InputSettings.h"
 #include "Kismet/GameplayStatics.h"
@@ -21,9 +22,8 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
 //TODO Use Enum to model left/right turn for this and hallways
 
-constexpr float BASE_SPEED = 500;
-constexpr float SPEED_STEP = 50;
-constexpr float MAX_SPEED = 1500;
+constexpr float START_SPEED_RATIO = 0.2;
+constexpr unsigned int TOTALSPEEDUPS = 10;
 
 //////////////////////////////////////////////////////////////////////////
 // AStarRunner2019Character
@@ -36,13 +36,15 @@ AStarRunner2019Character::AStarRunner2019Character()
 
 	this->bIsTurnable = false;
 	this->HallwaysPassedCount = 0;
+	this->NextSpeedupThreshold = 5;
+	this->NumSpeedups = 1;
+	this->GameTime = 0;
 
 	this->bIsTurning = false;
 	this->TurnDirection = EDirection::None;
-	this->MovementComponent = this->GetCharacterMovement();
-	this->MovementComponent->MaxWalkSpeed = BASE_SPEED;
-
-	this->TimeElapsed = 0;
+	this->GetCharacterMovement()->MaxWalkSpeed = 1500;
+	this->MoveSpeedRatio = START_SPEED_RATIO;
+	this->AccelerationRatio = 0.08;
 
 	// set our turn rates for input
 	this->BaseTurnRate = 45.f;
@@ -59,6 +61,22 @@ void AStarRunner2019Character::BeginPlay()
 {
 	// Call the base class
 	Super::BeginPlay();
+
+	this->PlayerHUD = Cast<AStarRunner2019HUD>(
+		this->GetWorld()->GetFirstPlayerController()->GetHUD());
+	this->PlayerHUD->SetSpeedBar(static_cast<float>(1) / TOTALSPEEDUPS);
+
+	// Set Clock Timer
+	const float RateSeconds = 1;
+	const bool bDoLoop = true;
+	const float FirstDelay = 0;
+	this->GetWorldTimerManager().SetTimer(
+		this->GameClock,
+		this,
+		&AStarRunner2019Character::UpdateGameClock,
+		RateSeconds,
+		bDoLoop,
+		FirstDelay);
 
 	this->CharacterCapsuleComponent->OnComponentEndOverlap.AddDynamic(
 		this,
@@ -80,10 +98,10 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent* 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &AStarRunner2019Character::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &AStarRunner2019Character::LookUpAtRate);
+	//PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	//PlayerInputComponent->BindAxis("TurnRate", this, &AStarRunner2019Character::TurnAtRate);
+	//PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	//PlayerInputComponent->BindAxis("LookUpRate", this, &AStarRunner2019Character::LookUpAtRate);
 
 	PlayerInputComponent->BindAction("TurnLeft", IE_Pressed, this, &AStarRunner2019Character::TurnLeft);
 	PlayerInputComponent->BindAction("TurnLeft", IE_Released, this, &AStarRunner2019Character::TurnLeft);
@@ -100,25 +118,21 @@ void AStarRunner2019Character::TurnRight() {
 	this->Turn(EDirection::Right);
 }
 
-void AStarRunner2019Character::Tick(float DeltaSeconds) {
-	this->TimeElapsed += DeltaSeconds;
-	UE_LOG(LogTemp, Warning, TEXT("HEEE %f"), this->TimeElapsed);
-
-	AStarRunner2019HUD* StarRunnerHUD
-		= Cast<AStarRunner2019HUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD());
-
-	StarRunnerHUD->SetElapsedTime(this->TimeElapsed);
-
-	if (this->bIsTurning) {
+void AStarRunner2019Character::Tick(float DeltaSeconds)
+{
+	if (this->bIsTurning)
+	{
 		AController* PlayerController = this->GetController();
 		const FRotator CurrentRotation = this->GetActorRotation();
 
-		const float RInterpStopTolerance = 0.12;
-		if (CurrentRotation.Equals(this->TargetRotation, RInterpStopTolerance)) {
+		const float RInterpStopTolerance = 1;
+		if (CurrentRotation.Equals(this->TargetRotation, RInterpStopTolerance))
+		{
 			PlayerController->SetControlRotation(this->TargetRotation);
 			this->bIsTurning = false;
 		}
-		else {
+		else
+		{
 			const float InterpSpeed = 8;
 			PlayerController->SetControlRotation(FMath::RInterpTo(
 				CurrentRotation,
@@ -129,9 +143,9 @@ void AStarRunner2019Character::Tick(float DeltaSeconds) {
 	}
 }
 
-void AStarRunner2019Character::MoveForward(float Value) {
-	const float InputOverride = 1;
-	this->AddMovementInput(this->GetActorForwardVector(), InputOverride);
+void AStarRunner2019Character::MoveForward(float val)
+{
+	this->AddMovementInput(this->GetActorForwardVector(), this->MoveSpeedRatio);
 }
 
 void AStarRunner2019Character::MoveRight(float Value)
@@ -157,6 +171,24 @@ void AStarRunner2019Character::LookUpAtRate(float Rate)
 	this->AddControllerPitchInput(Rate * this->BaseLookUpRate * SecondsPerFrame);
 }
 
+void AStarRunner2019Character::SpeedUp()
+{
+	const bool bAtSpeedStep = this->HallwaysPassedCount == this->NextSpeedupThreshold;
+	const bool bAtMaxSpeed = this->NumSpeedups == TOTALSPEEDUPS;
+	if (bAtSpeedStep && !bAtMaxSpeed)
+	{
+		this->HallwaysPassedCount = 0;
+		this->NextSpeedupThreshold++;
+
+		this->MoveSpeedRatio += this->AccelerationRatio;
+		this->MoveSpeedRatio = FMath::Clamp<float>(this->MoveSpeedRatio, 0, 1);
+
+		const float SpeedBarRatio = static_cast<float>(++this->NumSpeedups) / TOTALSPEEDUPS;
+		this->PlayerHUD->SetSpeedBar(SpeedBarRatio);
+		this->AddMovementInput(this->GetActorForwardVector(), this->MoveSpeedRatio);
+	}
+}
+
 void AStarRunner2019Character::OnOverlapEnd(
 	UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor,
@@ -166,32 +198,25 @@ void AStarRunner2019Character::OnOverlapEnd(
 	if (OtherActor->IsA(AHallwayActor::StaticClass()))
 	{
 		auto* HallwayActor = Cast<AHallwayActor>(OtherActor);
-		auto* HallwayTriggerBox = HallwayActor->GetHallwayJointComponent()->GetTriggerBox();
+		UBoxComponent* HallwayTriggerBox = HallwayActor->GetHallwayJointComponent()->GetTriggerBox();
 
 		if (HallwayTriggerBox == OtherComp)
 		{
 			++this->HallwaysPassedCount;
-			
-			const bool bAtSpeedStep = this->HallwaysPassedCount % 5 == 0;
-			const bool bAtMaxSpeed = this->MovementComponent->MaxWalkSpeed >= MAX_SPEED;
-			if (bAtSpeedStep && !bAtMaxSpeed)
-			{
-				this->MovementComponent->MaxWalkSpeed += SPEED_STEP;
-
-				AStarRunner2019HUD* StarRunnerHUD
-					= Cast<AStarRunner2019HUD>(this->GetWorld()->GetFirstPlayerController()->GetHUD());
-
-				float SpeedPercentage = this->MovementComponent->MaxWalkSpeed / MAX_SPEED;
-				StarRunnerHUD->SetSpeedBar(SpeedPercentage);
-
-			}
+			this->SpeedUp();
 		}
 	}
 }
 
+void AStarRunner2019Character::UpdateGameClock()
+{
+	this->PlayerHUD->SetElapsedTime(this->GameTime++);
+}
+
 void AStarRunner2019Character::Turn(EDirection Direction)
 {
-	if (this->bIsTurnable) {
+	if (this->bIsTurnable)
+	{
 		this->TargetRotation = FRotator(this->GetActorRotation());
 		this->TargetRotation.Yaw += static_cast<float>(Direction) * 90;
 

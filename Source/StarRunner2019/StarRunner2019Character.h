@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/TimelineComponent.h"
+#include "StarRunner2019HUD.h"
 #include "StarRunner2019Character.generated.h"
 
 class UInputComponent;
@@ -32,7 +34,6 @@ protected:
 	virtual void Tick(float DeltaSeconds) override;
 
 public:
-
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	float BaseTurnRate;
@@ -40,6 +41,15 @@ public:
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	float BaseLookUpRate;
+
+	UPROPERTY(BlueprintReadOnly)
+	float MoveSpeedRatio;
+
+	UPROPERTY(BlueprintReadOnly)
+	float GameTime;
+
+	UPROPERTY(BlueprintReadOnly)
+	float AccelerationRatio;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsTurnable;
@@ -50,10 +60,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EDirection TurnDirection;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int HallwaysPassedCount;
+	unsigned int HallwaysPassedCount;
 
-	UPROPERTY(BlueprintReadWrite)
+	unsigned int NextSpeedupThreshold;
+
+	unsigned int NumSpeedups;
+
+	UPROPERTY(BlueprintReadOnly)
 	UCharacterMovementComponent* MovementComponent;
 
 	UPROPERTY(BlueprintReadWrite)
@@ -61,8 +74,9 @@ public:
 
 	FRotator TargetRotation;
 
-	float TimeElapsed;
+	FTimerHandle GameClock;
 
+	AStarRunner2019HUD* PlayerHUD;
 private:
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp,
@@ -70,10 +84,14 @@ private:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
 
+	UFUNCTION()
+	void UpdateGameClock();
+
 	void Turn(EDirection Direction);
 
+	void SpeedUp();
+
 protected:
-	/** Handles moving forward/backward */
 	void MoveForward(float val);
 
 	/** Handles stafing movement, left and right */
