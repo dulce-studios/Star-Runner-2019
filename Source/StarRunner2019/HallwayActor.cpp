@@ -103,7 +103,9 @@ void AHallwayActor::OnOverlapEnd(
 			ChildHallwayToDestroy = this->LeftChildHallway;
 			break;
 		default:
-			throw new std::logic_error("Invalid Turn Direction");
+			//This does happen when you restart the game while colliding with the trigger box.
+			//default behavior for now is to return.  May need to check for leaks
+			return;
 		}
 		ChildHallwayToDestroy->LeftChildHallway->Destroy();
 		ChildHallwayToDestroy->RightChildHallway->Destroy();

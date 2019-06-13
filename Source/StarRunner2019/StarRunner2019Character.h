@@ -57,6 +57,9 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsTurning;
 
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsPaused;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EDirection TurnDirection;
 
@@ -77,6 +80,8 @@ public:
 	FTimerHandle GameClock;
 
 	AStarRunner2019HUD* PlayerHUD;
+
+	void TogglePaused();
 private:
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp,
@@ -92,6 +97,7 @@ private:
 	void SpeedUp();
 
 protected:
+
 	void MoveForward(float val);
 
 	/** Handles stafing movement, left and right */
