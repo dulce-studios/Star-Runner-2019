@@ -30,7 +30,6 @@ void AStarRunner2019GameMode::BeginPlay()
 	AActor* PlayerStart = this->FindPlayerStart(PlayerController, FString());
 	FTransform SpawnTransform(PlayerStart->GetRootComponent()->GetComponentTransform());
 	SpawnTransform.AddToTranslation(FVector(0, 0, -120));
-	SpawnTransform.SetScale3D(FVector(50));
 
 	AHallwayActor* InitialHallway = this->SpawnInitialHallway(SpawnTransform);
 	InitialHallway->SpawnLeftChildHallway();
