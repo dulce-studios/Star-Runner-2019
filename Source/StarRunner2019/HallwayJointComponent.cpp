@@ -7,10 +7,9 @@ UHallwayJointComponent::UHallwayJointComponent() {
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(
 		TEXT("StaticMesh'/Game/Geometry/Meshes/hallwayjoint.hallwayjoint'"));
 	UStaticMesh* staticMesh = MeshAsset.Object;
-	this->SetStaticMesh(staticMesh);
-
-	const FVector triggerBoxScale(0.075);
-	FTransform triggerBoxTransform(FRotator(0), FVector(0, 0, 2), triggerBoxScale);
+	this->SetStaticMesh(staticMesh); 
+	
+	FTransform triggerBoxTransform(FRotator(0), FVector(0), FVector(4));
 	FName triggerBoxName = TEXT("TriggerBox");
 	this->triggerBox = this->CreateDefaultSubobject<UBoxComponent>(triggerBoxName);
 	this->triggerBox->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
