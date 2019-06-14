@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 
 #include "StarRunner2019Widget.h"
+#include "PauseWidget.h"
 
 #include "GameFramework/HUD.h"
 #include "StarRunner2019HUD.generated.h"
@@ -24,7 +25,23 @@ public:
 
 	void SetElapsedTime(float ElapsedSeconds);
 
+	void ShowPauseMenu();
+
+	void ClosePauseMenu();
+
+	UFUNCTION()
+	void PauseMenuContinueClicked();
+
+	UFUNCTION()
+	void PauseMenuRestartClicked();
+
+	UFUNCTION()
+	void PauseMenuQuitClicked();
+
 private:
 	UPROPERTY()
 	UStarRunner2019Widget* StarRunnerWidget;
+
+	UPROPERTY()
+	UPauseWidget* PauseWidget;
 };

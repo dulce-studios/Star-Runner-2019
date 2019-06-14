@@ -34,6 +34,8 @@ AStarRunner2019Character::AStarRunner2019Character()
 	this->CharacterCapsuleComponent = GetCapsuleComponent();
 	this->CharacterCapsuleComponent->InitCapsuleSize(55.f, 96.0f);
 
+	this->bIsPaused = false;
+
 	this->bIsTurnable = false;
 	this->HallwaysPassedCount = 0;
 	this->NextSpeedupThreshold = 5;
@@ -95,6 +97,9 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AStarRunner2019Character::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AStarRunner2019Character::MoveRight);
 
+	FInputActionBinding& toggle = PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &AStarRunner2019Character::TogglePaused);
+	toggle.bExecuteWhenPaused = true; // catches input when paused
+
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
@@ -125,7 +130,7 @@ void AStarRunner2019Character::Tick(float DeltaSeconds)
 		AController* PlayerController = this->GetController();
 		const FRotator CurrentRotation = this->GetActorRotation();
 
-		const float RInterpStopTolerance = 1;
+		const float RInterpStopTolerance = 0.12;
 		if (CurrentRotation.Equals(this->TargetRotation, RInterpStopTolerance))
 		{
 			PlayerController->SetControlRotation(this->TargetRotation);
@@ -141,6 +146,20 @@ void AStarRunner2019Character::Tick(float DeltaSeconds)
 				InterpSpeed));
 		}
 	}
+}
+
+void AStarRunner2019Character::TogglePaused()
+{
+	this->bIsPaused = !this->bIsPaused;
+	if (this->bIsPaused)
+	{
+		this->PlayerHUD->ShowPauseMenu();
+	}
+	else
+	{
+		this->PlayerHUD->ClosePauseMenu();
+	}
+	UGameplayStatics::SetGamePaused(this->GetWorld(), this->bIsPaused);
 }
 
 void AStarRunner2019Character::MoveForward(float val)

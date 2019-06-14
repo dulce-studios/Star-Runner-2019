@@ -27,6 +27,7 @@ void AStarRunner2019GameMode::BeginPlay()
 {
 	// Based on https://answers.unrealengine.com/questions/337711/getworldtransform-for-scenecomponent-in-c.html
 	AController* PlayerController = this->DefaultPawnClass.GetDefaultObject()->GetController();
+	this->AllowPausing(Cast<APlayerController>(PlayerController));
 	AActor* PlayerStart = this->FindPlayerStart(PlayerController, FString());
 	FTransform SpawnTransform(PlayerStart->GetRootComponent()->GetComponentTransform());
 	SpawnTransform.AddToTranslation(FVector(0, 0, -120));
