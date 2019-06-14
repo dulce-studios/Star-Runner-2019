@@ -25,11 +25,13 @@ public:
 
 	UFUNCTION()
 	void SpawnRightChildHallway();
+
+	UHallwayJointComponent* GetHallwayJointComponent();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"), BlueprintReadWrite)
 	UHallwayJointComponent* HallwayJointComponent;
 
 	UPROPERTY(BlueprintReadOnly)
@@ -39,8 +41,6 @@ protected:
 	AHallwayActor* RightChildHallway;
 
 private:
-	void Setup();
-
 	UFUNCTION()
 	void OnOverlapBegin(
 		UPrimitiveComponent* OverlapComponent,
@@ -57,6 +57,5 @@ private:
 		int32 OtherBodyIndex);
 	
 	AHallwayActor* SpawnHallFromYawAndOffset(
-		float yawDegrees,
-		float rotationAlignedOffset);
+		float yawDegrees);
 };

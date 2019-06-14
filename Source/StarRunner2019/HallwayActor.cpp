@@ -14,7 +14,8 @@
 #include <sstream> //wstringstream
 
 // Sets default values
-AHallwayActor::AHallwayActor() {
+AHallwayActor::AHallwayActor()
+{
 	/* Set this actor to call Tick() every frame.
 	 * You can turn this off to improve performance if you don't need it.
 	 */
@@ -27,7 +28,7 @@ AHallwayActor::AHallwayActor() {
 		this->RootComponent,
 		FAttachmentTransformRules::KeepRelativeTransform);
 
-	FTransform hallwayTransform(FRotator(0), FVector(0), FVector(1));
+	FVector hallwayUnitTranslation(0);
 
 	float xOffset;
 	{ //get hallway extents
@@ -42,12 +43,13 @@ AHallwayActor::AHallwayActor() {
 			hallwayBoxExtent, //outarg
 			hallwaySphereRadius); //outarg
 		//as the mesh is centered, we double the length
-		xOffset = hallwayBoxExtent.X * 2.0f; 
+		xOffset = hallwayBoxExtent.X * 2.0f;
 		hallwayComponent->DestroyComponent();
 	}
 
 	std::srand(std::time(nullptr)); //seed rand
 	const int numHallways = 1 + (std::rand() % 5); //[1...5]
+
 	for (int i = 0; i < numHallways; i++)
 	{
 		std::wstringstream hallwayName(L"HallwayUnitComponent");
@@ -58,11 +60,21 @@ AHallwayActor::AHallwayActor() {
 		nextHallway->AttachToComponent(
 			this->RootComponent,
 			FAttachmentTransformRules::KeepRelativeTransform);
-		nextHallway->SetRelativeTransform(hallwayTransform);
-		hallwayTransform.AddToTranslation(FVector(xOffset, 0, 0));
+		nextHallway->SetRelativeLocation(hallwayUnitTranslation);
+		hallwayUnitTranslation += FVector(xOffset, 0, 0);
 	}
-	this->HallwayJointComponent->SetRelativeTransform(hallwayTransform);
+
+	const float hallwayJointX = hallwayUnitTranslation.X - 200.0f;
+	const float hallwayJointZ = hallwayUnitTranslation.Z + 10.0f;
+
+	FVector hallwayJointTranslation(
+		hallwayJointX,
+		0.0f, 
+		hallwayJointZ);
+
+	this->HallwayJointComponent->SetRelativeLocation(hallwayJointTranslation);
 }
+	
 
 void AHallwayActor::OnOverlapBegin(
 	UPrimitiveComponent* OverlapComponent,
@@ -75,6 +87,7 @@ void AHallwayActor::OnOverlapBegin(
 	if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
 		auto* playerCharacter = Cast<AStarRunner2019Character>(OtherActor);
 		playerCharacter->bIsTurnable = true;
+
 		//spawn grandchildren before the player turns
 		this->LeftChildHallway->SpawnLeftChildHallway();
 		this->LeftChildHallway->SpawnRightChildHallway();
@@ -102,7 +115,9 @@ void AHallwayActor::OnOverlapEnd(
 			ChildHallwayToDestroy = this->LeftChildHallway;
 			break;
 		default:
-			throw new std::logic_error("Invalid Turn Direction");
+			//This does happen when you restart the game while colliding with the trigger box.
+			//default behavior for now is to return.  May need to check for leaks
+			return;
 		}
 		ChildHallwayToDestroy->LeftChildHallway->Destroy();
 		ChildHallwayToDestroy->RightChildHallway->Destroy();
@@ -112,17 +127,38 @@ void AHallwayActor::OnOverlapEnd(
 	}
 }
 
-void AHallwayActor::SpawnLeftChildHallway() {
-	this->LeftChildHallway = this->SpawnHallFromYawAndOffset(-90, 200);
+void AHallwayActor::SpawnLeftChildHallway() 
+{
+	this->LeftChildHallway = this->SpawnHallFromYawAndOffset(-90);
 }
 
-void AHallwayActor::SpawnRightChildHallway() {
-	this->RightChildHallway = this->SpawnHallFromYawAndOffset(90, 200);
+void AHallwayActor::SpawnRightChildHallway() 
+{
+	this->RightChildHallway = this->SpawnHallFromYawAndOffset(90);
+}
+
+UHallwayJointComponent* AHallwayActor::GetHallwayJointComponent()
+{
+	return this->HallwayJointComponent;
 }
 
 AHallwayActor* AHallwayActor::SpawnHallFromYawAndOffset(
-	float yawDegrees,
-	float rotationAlignedOffset) {
+	float yawDegrees) {
+
+	float rotationAlignedOffset;
+	{
+		FVector hallwayJointOrigin;
+		FVector hallwayJointBoxExtent;
+		float hallwayJointSphereRadius;
+		UKismetSystemLibrary::GetComponentBounds(
+			this->HallwayJointComponent,
+			hallwayJointOrigin, // outargs
+			hallwayJointBoxExtent, // outargs
+			hallwayJointSphereRadius // outargs
+		);
+		const float childHallwayRotationScale = 3.33f;
+		rotationAlignedOffset = (hallwayJointBoxExtent.X * childHallwayRotationScale);
+	}
 
 	UWorld* World = this->GetWorld();
 	if (!World) {
@@ -132,10 +168,13 @@ AHallwayActor* AHallwayActor::SpawnHallFromYawAndOffset(
 
 	FTransform childTransform(this->HallwayJointComponent->GetComponentTransform());
 	childTransform.ConcatenateRotation(FQuat(FRotator(0, yawDegrees, 0)));
+
+	float zOffset = -10.0f;
+
 	/* Align offset by world rotation */
 	FVector offset = childTransform
 		.GetRotation()
-		.RotateVector(FVector(rotationAlignedOffset, 0, 0));
+		.RotateVector(FVector(rotationAlignedOffset, 0, zOffset));
 	childTransform.AddToTranslation(offset);
 
 	FActorSpawnParameters Info;
