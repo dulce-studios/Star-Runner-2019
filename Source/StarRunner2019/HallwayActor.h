@@ -31,7 +31,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"), BlueprintReadWrite)
 	UHallwayJointComponent* HallwayJointComponent;
 
 	UPROPERTY(BlueprintReadOnly)
@@ -57,6 +57,5 @@ private:
 		int32 OtherBodyIndex);
 	
 	AHallwayActor* SpawnHallFromYawAndOffset(
-		float yawDegrees,
-		float rotationAlignedOffset);
+		float yawDegrees);
 };
