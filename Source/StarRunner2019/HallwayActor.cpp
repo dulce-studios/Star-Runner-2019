@@ -192,12 +192,12 @@ AHallwayActor* AHallwayActor::SpawnHallFromYawAndOffset(
 void AHallwayActor::BeginPlay() {
 	Super::BeginPlay();
 
-	UBoxComponent* triggerBox = this->HallwayJointComponent->GetHallwaySpawnManagerBox();
+	UBoxComponent* spawnManagerBox = this->HallwayJointComponent->GetHallwaySpawnManagerBox();
 
-	triggerBox->OnComponentBeginOverlap.AddDynamic(
+	spawnManagerBox->OnComponentBeginOverlap.AddDynamic(
 		this,
 		&AHallwayActor::OnOverlapBegin);
-	triggerBox->OnComponentEndOverlap.AddDynamic(
+	spawnManagerBox->OnComponentEndOverlap.AddDynamic(
 		this,
 		&AHallwayActor::OnOverlapEnd);
 }

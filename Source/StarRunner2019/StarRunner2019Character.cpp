@@ -217,9 +217,9 @@ void AStarRunner2019Character::OnOverlapEnd(
 	if (OtherActor->IsA(AHallwayActor::StaticClass()))
 	{
 		auto* HallwayActor = Cast<AHallwayActor>(OtherActor);
-		UBoxComponent* HallwayTriggerBox = HallwayActor->GetHallwayJointComponent()->GetHallwaySpawnManagerBox();
+		UBoxComponent* spawnManagerBox = HallwayActor->GetHallwayJointComponent()->GetHallwaySpawnManagerBox();
 
-		if (HallwayTriggerBox == OtherComp)
+		if (spawnManagerBox == OtherComp)
 		{
 			++this->HallwaysPassedCount;
 			this->SpeedUp();
