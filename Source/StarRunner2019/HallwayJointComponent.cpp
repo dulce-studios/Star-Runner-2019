@@ -10,13 +10,13 @@ UHallwayJointComponent::UHallwayJointComponent() {
 	this->SetStaticMesh(staticMesh); 
 	
 	FTransform triggerBoxTransform(FRotator(0), FVector(0), FVector(4));
-	FName triggerBoxName = TEXT("TriggerBox");
-	this->triggerBox = this->CreateDefaultSubobject<UBoxComponent>(triggerBoxName);
-	this->triggerBox->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
-	this->triggerBox->SetRelativeTransform(triggerBoxTransform);
+	FName hallwaySpawnManagerBoxName = TEXT("HallwaySpawnManagerBox");
+	this->hallwaySpawnManagerBox = this->CreateDefaultSubobject<UBoxComponent>(hallwaySpawnManagerBoxName);
+	this->hallwaySpawnManagerBox->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
+	this->hallwaySpawnManagerBox->SetRelativeTransform(triggerBoxTransform);
 }
 
-UBoxComponent* UHallwayJointComponent::GetTriggerBox()
+UBoxComponent* UHallwayJointComponent::GetHallwaySpawnManagerBox()
 {
-	return this->triggerBox;
+	return this->hallwaySpawnManagerBox;
 }

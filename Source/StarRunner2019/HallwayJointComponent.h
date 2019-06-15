@@ -18,9 +18,9 @@ public:
     UHallwayJointComponent();
 
 	UFUNCTION()
-	UBoxComponent* GetTriggerBox();
+	UBoxComponent* GetHallwaySpawnManagerBox();
 
 private:
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"), BlueprintReadWrite)
-	UBoxComponent* triggerBox;
+	UBoxComponent* hallwaySpawnManagerBox;
 };
