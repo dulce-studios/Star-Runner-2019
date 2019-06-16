@@ -85,7 +85,6 @@ void AHallwayActor::OnOverlapBegin(
 	const FHitResult& SweepResult) {
 
 	if (OverlapComponent == this->HallwayJointComponent->GetHallwaySpawnManagerBox()) {
-		UE_LOG(LogTemp, Warning, TEXT("WE HIT SPAWN BOI"));
 		if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
 			auto* playerCharacter = Cast<AStarRunner2019Character>(OtherActor);
 			playerCharacter->bIsTurnable = true;
@@ -95,12 +94,6 @@ void AHallwayActor::OnOverlapBegin(
 			this->LeftChildHallway->SpawnRightChildHallway();
 			this->RightChildHallway->SpawnLeftChildHallway();
 			this->RightChildHallway->SpawnRightChildHallway();
-		}
-	}
-	else if (OverlapComponent == this->HallwayJointComponent->GetHallwayGameOverBox()) {
-		UE_LOG(LogTemp, Warning, TEXT("ZOOONGATI"));
-		if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
-			UE_LOG(LogTemp, Warning, TEXT("WHEEEEE OVERLAP BEGIN"));
 		}
 	}
 }
@@ -134,11 +127,6 @@ void AHallwayActor::OnOverlapEnd(
 			ChildHallwayToDestroy->Destroy();
 
 			this->Destroy();
-		}
-	}
-	else if (OverlappedComp == this->HallwayJointComponent->GetHallwayGameOverBox()) {
-		if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
-			UE_LOG(LogTemp, Warning, TEXT("OVERLAP ENDDD"));
 		}
 	}
 }
