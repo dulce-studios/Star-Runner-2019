@@ -20,7 +20,15 @@ public:
 	UFUNCTION()
 	UBoxComponent* GetHallwaySpawnManagerBox();
 
+	UFUNCTION()
+	UBoxComponent* GetHallwayGameOverBox();
+
 private:
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"), BlueprintReadWrite)
 	UBoxComponent* hallwaySpawnManagerBox;
+
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"), BlueprintReadWrite)
+	UBoxComponent* hallwayGameOverBox;
+
+	UBoxComponent* AttachChildComponent(FName ChildComponentName, FTransform ChildComponentTransform);
 };
