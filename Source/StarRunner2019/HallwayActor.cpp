@@ -84,15 +84,24 @@ void AHallwayActor::OnOverlapBegin(
 	bool bFromSweep,
 	const FHitResult& SweepResult) {
 
-	if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
-		auto* playerCharacter = Cast<AStarRunner2019Character>(OtherActor);
-		playerCharacter->bIsTurnable = true;
+	if (OverlapComponent == this->HallwayJointComponent->GetHallwaySpawnManagerBox()) {
+		UE_LOG(LogTemp, Warning, TEXT("WE HIT SPAWN BOI"));
+		if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
+			auto* playerCharacter = Cast<AStarRunner2019Character>(OtherActor);
+			playerCharacter->bIsTurnable = true;
 
-		//spawn grandchildren before the player turns
-		this->LeftChildHallway->SpawnLeftChildHallway();
-		this->LeftChildHallway->SpawnRightChildHallway();
-		this->RightChildHallway->SpawnLeftChildHallway();
-		this->RightChildHallway->SpawnRightChildHallway();
+			//spawn grandchildren before the player turns
+			this->LeftChildHallway->SpawnLeftChildHallway();
+			this->LeftChildHallway->SpawnRightChildHallway();
+			this->RightChildHallway->SpawnLeftChildHallway();
+			this->RightChildHallway->SpawnRightChildHallway();
+		}
+	}
+	else if (OverlapComponent == this->HallwayJointComponent->GetHallwayGameOverBox()) {
+		UE_LOG(LogTemp, Warning, TEXT("ZOOONGATI"));
+		if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
+			UE_LOG(LogTemp, Warning, TEXT("WHEEEEE OVERLAP BEGIN"));
+		}
 	}
 }
 
@@ -102,28 +111,35 @@ void AHallwayActor::OnOverlapEnd(
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex) {
 
-	if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
-		auto* PlayerCharacter = Cast<AStarRunner2019Character>(OtherActor);
-		PlayerCharacter->bIsTurnable = false;
+	if (OverlappedComp == this->HallwayJointComponent->GetHallwaySpawnManagerBox()) {
+		if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
+			auto* PlayerCharacter = Cast<AStarRunner2019Character>(OtherActor);
+			PlayerCharacter->bIsTurnable = false;
 
-		AHallwayActor* ChildHallwayToDestroy = nullptr;
-		switch (PlayerCharacter->TurnDirection) {
-		case EDirection::Left:
-			ChildHallwayToDestroy = this->RightChildHallway;
-			break;
-		case EDirection::Right:
-			ChildHallwayToDestroy = this->LeftChildHallway;
-			break;
-		default:
-			//This does happen when you restart the game while colliding with the trigger box.
-			//default behavior for now is to return.  May need to check for leaks
-			return;
+			AHallwayActor* ChildHallwayToDestroy = nullptr;
+			switch (PlayerCharacter->TurnDirection) {
+			case EDirection::Left:
+				ChildHallwayToDestroy = this->RightChildHallway;
+				break;
+			case EDirection::Right:
+				ChildHallwayToDestroy = this->LeftChildHallway;
+				break;
+			default:
+				//This does happen when you restart the game while colliding with the trigger box.
+				//default behavior for now is to return.  May need to check for leaks
+				return;
+			}
+			ChildHallwayToDestroy->LeftChildHallway->Destroy();
+			ChildHallwayToDestroy->RightChildHallway->Destroy();
+			ChildHallwayToDestroy->Destroy();
+
+			this->Destroy();
 		}
-		ChildHallwayToDestroy->LeftChildHallway->Destroy();
-		ChildHallwayToDestroy->RightChildHallway->Destroy();
-		ChildHallwayToDestroy->Destroy();
-
-		this->Destroy();
+	}
+	else if (OverlappedComp == this->HallwayJointComponent->GetHallwayGameOverBox()) {
+		if (OtherActor->IsA(AStarRunner2019Character::StaticClass())) {
+			UE_LOG(LogTemp, Warning, TEXT("OVERLAP ENDDD"));
+		}
 	}
 }
 
@@ -193,11 +209,18 @@ void AHallwayActor::BeginPlay() {
 	Super::BeginPlay();
 
 	UBoxComponent* spawnManagerBox = this->HallwayJointComponent->GetHallwaySpawnManagerBox();
-
 	spawnManagerBox->OnComponentBeginOverlap.AddDynamic(
 		this,
 		&AHallwayActor::OnOverlapBegin);
 	spawnManagerBox->OnComponentEndOverlap.AddDynamic(
+		this,
+		&AHallwayActor::OnOverlapEnd);
+
+	UBoxComponent* gameOverBox = this->HallwayJointComponent->GetHallwayGameOverBox();
+	gameOverBox->OnComponentBeginOverlap.AddDynamic(
+		this,
+		&AHallwayActor::OnOverlapBegin);
+	gameOverBox->OnComponentEndOverlap.AddDynamic(
 		this,
 		&AHallwayActor::OnOverlapEnd);
 }
