@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 
 #include "StarRunner2019Widget.h"
+#include "GameOverWidget.h"
 #include "PauseWidget.h"
 
 #include "GameFramework/HUD.h"
@@ -22,12 +23,20 @@ public:
 	virtual void BeginPlay() override;
 
 	void SetSpeedBar(float SpeedPercentage);
-
 	void SetElapsedTime(float ElapsedSeconds);
-
 	void ShowPauseMenu();
-
 	void ClosePauseMenu();
+	void ShowGameOverMenu();
+	void RestartGame();
+	void QuitGame();
+
+	void SetGameOverHallwaysPassedText(unsigned int hallwaysPassedCount);
+	void SetGameOverTimeElapsedText(float elapsedSeconds);
+
+	template <typename T>
+	void FormatTextBlock(UTextBlock* textBlock, T value);
+
+	FText ConvertFloatSecondsToText(float seconds);
 
 	UFUNCTION()
 	void PauseMenuContinueClicked();
@@ -38,10 +47,19 @@ public:
 	UFUNCTION()
 	void PauseMenuQuitClicked();
 
+	UFUNCTION()
+	void GameOverRestartClicked();
+
+	UFUNCTION()
+	void GameOverQuitClicked();
+
 private:
 	UPROPERTY()
 	UStarRunner2019Widget* StarRunnerWidget;
 
 	UPROPERTY()
 	UPauseWidget* PauseWidget;
+
+	UPROPERTY()
+	UGameOverWidget* GameOverWidget;
 };
