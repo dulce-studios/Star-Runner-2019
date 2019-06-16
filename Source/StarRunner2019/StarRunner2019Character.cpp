@@ -115,29 +115,28 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAction("TurnRight", IE_Released, this, &AStarRunner2019Character::TurnRight);
 }
 
-void AStarRunner2019Character::TurnLeft() {
+void AStarRunner2019Character::TurnLeft() 
+{
 	this->Turn(EDirection::Left);
 }
 
-void AStarRunner2019Character::TurnRight() {
+void AStarRunner2019Character::TurnRight() 
+{
 	this->Turn(EDirection::Right);
 }
 
 void AStarRunner2019Character::Tick(float DeltaSeconds)
 {
-	if (this->bIsTurning)
-	{
+	if (this->bIsTurning) {
 		AController* PlayerController = this->GetController();
 		const FRotator CurrentRotation = this->GetActorRotation();
 
 		const float RInterpStopTolerance = 0.12;
-		if (CurrentRotation.Equals(this->TargetRotation, RInterpStopTolerance))
-		{
+		if (CurrentRotation.Equals(this->TargetRotation, RInterpStopTolerance)) {
 			PlayerController->SetControlRotation(this->TargetRotation);
 			this->bIsTurning = false;
 		}
-		else
-		{
+		else {
 			const float InterpSpeed = 8;
 			PlayerController->SetControlRotation(FMath::RInterpTo(
 				CurrentRotation,
@@ -151,12 +150,10 @@ void AStarRunner2019Character::Tick(float DeltaSeconds)
 void AStarRunner2019Character::TogglePaused()
 {
 	this->bIsPaused = !this->bIsPaused;
-	if (this->bIsPaused)
-	{
+	if (this->bIsPaused) {
 		this->PlayerHUD->ShowPauseMenu();
 	}
-	else
-	{
+	else {
 		this->PlayerHUD->ClosePauseMenu();
 	}
 	UGameplayStatics::SetGamePaused(this->GetWorld(), this->bIsPaused);
@@ -169,8 +166,7 @@ void AStarRunner2019Character::MoveForward(float val)
 
 void AStarRunner2019Character::MoveRight(float Value)
 {
-	if (Value != 0)
-	{
+	if (Value != 0) {
 		// add movement in that direction
 		this->AddMovementInput(this->GetActorRightVector(), Value);
 	}
@@ -194,8 +190,7 @@ void AStarRunner2019Character::SpeedUp()
 {
 	const bool bAtSpeedStep = this->HallwaysPassedCount == this->NextSpeedupThreshold;
 	const bool bAtMaxSpeed = this->NumSpeedups == TOTALSPEEDUPS;
-	if (bAtSpeedStep && !bAtMaxSpeed)
-	{
+	if (bAtSpeedStep && !bAtMaxSpeed) {
 		this->HallwaysPassedCount = 0;
 		this->NextSpeedupThreshold++;
 
@@ -214,13 +209,11 @@ void AStarRunner2019Character::OnOverlapEnd(
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex)
 {
-	if (OtherActor->IsA(AHallwayActor::StaticClass()))
-	{
+	if (OtherActor->IsA(AHallwayActor::StaticClass())) {
 		auto* HallwayActor = Cast<AHallwayActor>(OtherActor);
 		UBoxComponent* spawnManagerBox = HallwayActor->GetHallwayJointComponent()->GetHallwaySpawnManagerBox();
 
-		if (spawnManagerBox == OtherComp)
-		{
+		if (spawnManagerBox == OtherComp) {
 			++this->HallwaysPassedCount;
 			this->SpeedUp();
 		}
@@ -234,8 +227,7 @@ void AStarRunner2019Character::UpdateGameClock()
 
 void AStarRunner2019Character::Turn(EDirection Direction)
 {
-	if (this->bIsTurnable)
-	{
+	if (this->bIsTurnable) {
 		this->TargetRotation = FRotator(this->GetActorRotation());
 		this->TargetRotation.Yaw += static_cast<float>(Direction) * 90;
 
