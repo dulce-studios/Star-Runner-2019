@@ -15,6 +15,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/InputSettings.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Math/NumericLimits.h"
 #include "Math/UnrealMathUtility.h"
 
@@ -79,6 +80,10 @@ void AStarRunner2019Character::BeginPlay()
 		RateSeconds,
 		bDoLoop,
 		FirstDelay);
+
+	this->CharacterCapsuleComponent->OnComponentBeginOverlap.AddDynamic(
+		this,
+		&AStarRunner2019Character::OnOverlapBegin);
 
 	this->CharacterCapsuleComponent->OnComponentEndOverlap.AddDynamic(
 		this,
@@ -203,6 +208,28 @@ void AStarRunner2019Character::SpeedUp()
 	}
 }
 
+void AStarRunner2019Character::OnOverlapBegin(
+	UPrimitiveComponent* OverlapComponent,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex,
+	bool bFromSweep,
+	const FHitResult& SweepResult)
+{
+	if (OtherActor->IsA(AHallwayActor::StaticClass())) {
+		auto* HallwayActor = Cast<AHallwayActor>(OtherActor);
+		auto* HallwayJointComponent = HallwayActor->GetHallwayJointComponent();
+
+		if (OtherComp == HallwayJointComponent->GetHallwayGameOverBox()) {
+			this->PlayerHUD->SetGameOverHallwaysPassedText(this->HallwaysPassedCount);
+			this->PlayerHUD->SetGameOverTimeElapsedText(this->GameTime);
+			this->PlayerHUD->ShowGameOverMenu();
+			const bool bGameOver = true;
+			UGameplayStatics::SetGamePaused(this->GetWorld(), bGameOver);
+		}
+	}
+}
+
 void AStarRunner2019Character::OnOverlapEnd(
 	UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor,
@@ -211,9 +238,9 @@ void AStarRunner2019Character::OnOverlapEnd(
 {
 	if (OtherActor->IsA(AHallwayActor::StaticClass())) {
 		auto* HallwayActor = Cast<AHallwayActor>(OtherActor);
-		UBoxComponent* spawnManagerBox = HallwayActor->GetHallwayJointComponent()->GetHallwaySpawnManagerBox();
+		auto* HallwayJointComponent = HallwayActor->GetHallwayJointComponent();
 
-		if (spawnManagerBox == OtherComp) {
+		if (OtherComp == HallwayJointComponent->GetHallwaySpawnManagerBox()) {
 			++this->HallwaysPassedCount;
 			this->SpeedUp();
 		}
