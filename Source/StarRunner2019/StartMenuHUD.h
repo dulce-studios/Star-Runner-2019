@@ -20,6 +20,10 @@ public:
 
 	UFUNCTION()
 	void StartButtonClicked();
+
+	UFUNCTION()
+	void ExitButtonClicked();
+
 private:
 	UPROPERTY()
 	UStartMenuWidget* StartMenu;

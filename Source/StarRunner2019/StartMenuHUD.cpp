@@ -28,12 +28,28 @@ void AStartMenuHUD::StartButtonClicked()
 		NextLevelName);
 }
 
+void AStartMenuHUD::ExitButtonClicked()
+{
+	const bool bIgnorePlatformRestrictions = false;
+	UKismetSystemLibrary::QuitGame(
+		this->GetWorld(),
+		this->PlayerOwner,
+		EQuitPreference::Quit,
+		bIgnorePlatformRestrictions);
+}
+
 void AStartMenuHUD::BeginPlay()
 {
 	UButton* StartGameButton = this->StartMenu->StartGameButton;
 	StartGameButton->OnClicked.AddDynamic(
 		this,
 		&AStartMenuHUD::StartButtonClicked);
+
+	UButton* ExitGameButton = this->StartMenu->ExitGameButton;
+	ExitGameButton->OnClicked.AddDynamic(
+		this,
+		&AStartMenuHUD::ExitButtonClicked);
+
 	this->StartMenu->AddToViewport();
 	this->PlayerOwner->bShowMouseCursor = true;
 }
