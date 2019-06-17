@@ -131,12 +131,10 @@ void AStarRunner2019HUD::RestartGame()
 
 void AStarRunner2019HUD::QuitGame()
 {
-	const bool bIgnorePlatformRestrictions = false;
-	UKismetSystemLibrary::QuitGame(
+	FName NextLevelName = TEXT("StartMenu");
+	UGameplayStatics::OpenLevel(
 		this->GetWorld(),
-		this->PlayerOwner,
-		EQuitPreference::Quit,
-		bIgnorePlatformRestrictions);
+		NextLevelName);
 }
 
 template <typename T>
