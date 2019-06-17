@@ -18,5 +18,5 @@ public:
 	UButton* StartGameButton;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UButton* EndGameButton;
+	UButton* ExitGameButton;
 };
