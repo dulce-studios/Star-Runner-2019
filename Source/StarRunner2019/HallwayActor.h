@@ -51,11 +51,11 @@ private:
 		const FHitResult& SweepResult);
 
 	UFUNCTION()
-	void OnOverlapEnd(UPrimitiveComponent* OverlappedComp,
+	void OnOverlapEnd(
+		UPrimitiveComponent* OverlappedComp,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
 	
-	AHallwayActor* SpawnHallFromYawAndOffset(
-		float yawDegrees);
+	AHallwayActor* SpawnHallway(float initialRelativeYaw);
 };

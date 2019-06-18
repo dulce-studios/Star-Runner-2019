@@ -80,6 +80,10 @@ void AStarRunner2019Character::BeginPlay()
 		bDoLoop,
 		FirstDelay);
 
+	this->CharacterCapsuleComponent->OnComponentBeginOverlap.AddDynamic(
+		this,
+		&AStarRunner2019Character::OnOverlapBegin);
+
 	this->CharacterCapsuleComponent->OnComponentEndOverlap.AddDynamic(
 		this,
 		&AStarRunner2019Character::OnOverlapEnd);
@@ -97,16 +101,12 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AStarRunner2019Character::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AStarRunner2019Character::MoveRight);
 
-	FInputActionBinding& toggle = PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &AStarRunner2019Character::TogglePaused);
-	toggle.bExecuteWhenPaused = true; // catches input when paused
-
-	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
-	// "turn" handles devices that provide an absolute delta, such as a mouse.
-	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	//PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	//PlayerInputComponent->BindAxis("TurnRate", this, &AStarRunner2019Character::TurnAtRate);
-	//PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	//PlayerInputComponent->BindAxis("LookUpRate", this, &AStarRunner2019Character::LookUpAtRate);
+	FInputActionBinding& Toggle = PlayerInputComponent->BindAction(
+		"Pause",
+		IE_Pressed,
+		this,
+		&AStarRunner2019Character::TogglePaused);
+	Toggle.bExecuteWhenPaused = true; // catches input when paused
 
 	PlayerInputComponent->BindAction("TurnLeft", IE_Pressed, this, &AStarRunner2019Character::TurnLeft);
 	PlayerInputComponent->BindAction("TurnLeft", IE_Released, this, &AStarRunner2019Character::TurnLeft);
@@ -115,29 +115,28 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAction("TurnRight", IE_Released, this, &AStarRunner2019Character::TurnRight);
 }
 
-void AStarRunner2019Character::TurnLeft() {
+void AStarRunner2019Character::TurnLeft() 
+{
 	this->Turn(EDirection::Left);
 }
 
-void AStarRunner2019Character::TurnRight() {
+void AStarRunner2019Character::TurnRight() 
+{
 	this->Turn(EDirection::Right);
 }
 
 void AStarRunner2019Character::Tick(float DeltaSeconds)
 {
-	if (this->bIsTurning)
-	{
+	if (this->bIsTurning) {
 		AController* PlayerController = this->GetController();
 		const FRotator CurrentRotation = this->GetActorRotation();
 
 		const float RInterpStopTolerance = 0.12;
-		if (CurrentRotation.Equals(this->TargetRotation, RInterpStopTolerance))
-		{
+		if (CurrentRotation.Equals(this->TargetRotation, RInterpStopTolerance)) {
 			PlayerController->SetControlRotation(this->TargetRotation);
 			this->bIsTurning = false;
 		}
-		else
-		{
+		else {
 			const float InterpSpeed = 8;
 			PlayerController->SetControlRotation(FMath::RInterpTo(
 				CurrentRotation,
@@ -151,12 +150,10 @@ void AStarRunner2019Character::Tick(float DeltaSeconds)
 void AStarRunner2019Character::TogglePaused()
 {
 	this->bIsPaused = !this->bIsPaused;
-	if (this->bIsPaused)
-	{
+	if (this->bIsPaused) {
 		this->PlayerHUD->ShowPauseMenu();
 	}
-	else
-	{
+	else {
 		this->PlayerHUD->ClosePauseMenu();
 	}
 	UGameplayStatics::SetGamePaused(this->GetWorld(), this->bIsPaused);
@@ -169,33 +166,17 @@ void AStarRunner2019Character::MoveForward(float val)
 
 void AStarRunner2019Character::MoveRight(float Value)
 {
-	if (Value != 0)
-	{
+	if (Value != 0) {
 		// add movement in that direction
 		this->AddMovementInput(this->GetActorRightVector(), Value);
 	}
-}
-
-void AStarRunner2019Character::TurnAtRate(float Rate)
-{
-	// calculate delta for this frame from the rate information
-	const float SecondsPerFrame = this->GetWorld()->GetDeltaSeconds();
-	this->AddControllerYawInput(Rate * this->BaseTurnRate * SecondsPerFrame);
-}
-
-void AStarRunner2019Character::LookUpAtRate(float Rate)
-{
-	// calculate delta for this frame from the rate information
-	const float SecondsPerFrame = this->GetWorld()->GetDeltaSeconds();
-	this->AddControllerPitchInput(Rate * this->BaseLookUpRate * SecondsPerFrame);
 }
 
 void AStarRunner2019Character::SpeedUp()
 {
 	const bool bAtSpeedStep = this->HallwaysPassedCount == this->NextSpeedupThreshold;
 	const bool bAtMaxSpeed = this->NumSpeedups == TOTALSPEEDUPS;
-	if (bAtSpeedStep && !bAtMaxSpeed)
-	{
+	if (bAtSpeedStep && !bAtMaxSpeed) {
 		this->HallwaysPassedCount = 0;
 		this->NextSpeedupThreshold++;
 
@@ -208,19 +189,40 @@ void AStarRunner2019Character::SpeedUp()
 	}
 }
 
+void AStarRunner2019Character::OnOverlapBegin(
+	UPrimitiveComponent* OverlappedComponent,
+	AActor* OtherActor,
+	UPrimitiveComponent* OtherComponent,
+	int32 OtherBodyIndex,
+	bool bFromSweep,
+	const FHitResult& SweepResult)
+{
+
+	if (OtherActor->IsA(AHallwayActor::StaticClass())) {
+		auto* HallwayActor = Cast<AHallwayActor>(OtherActor);
+		UHallwayJointComponent* HallwayJointComponent = HallwayActor->GetHallwayJointComponent();
+
+		if (OtherComponent == HallwayJointComponent->GetKillTriggerBox()) {
+			this->PlayerHUD->SetGameOverHallwaysPassedText(this->HallwaysPassedCount);
+			this->PlayerHUD->SetGameOverTimeElapsedText(this->GameTime);
+			this->PlayerHUD->ShowGameOverMenu();
+			const bool bGameOver = true;
+			UGameplayStatics::SetGamePaused(this->GetWorld(), bGameOver);
+		}
+	}
+}
+
 void AStarRunner2019Character::OnOverlapEnd(
 	UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor,
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex)
 {
-	if (OtherActor->IsA(AHallwayActor::StaticClass()))
-	{
+	if (OtherActor->IsA(AHallwayActor::StaticClass())) {
 		auto* HallwayActor = Cast<AHallwayActor>(OtherActor);
-		UBoxComponent* HallwayTriggerBox = HallwayActor->GetHallwayJointComponent()->GetTriggerBox();
+		UHallwayJointComponent* HallwayJointComponent = HallwayActor->GetHallwayJointComponent();
 
-		if (HallwayTriggerBox == OtherComp)
-		{
+		if (OtherComp == HallwayJointComponent->GetSpawnTriggerBox()) {
 			++this->HallwaysPassedCount;
 			this->SpeedUp();
 		}
@@ -234,8 +236,7 @@ void AStarRunner2019Character::UpdateGameClock()
 
 void AStarRunner2019Character::Turn(EDirection Direction)
 {
-	if (this->bIsTurnable)
-	{
+	if (this->bIsTurnable) {
 		this->TargetRotation = FRotator(this->GetActorRotation());
 		this->TargetRotation.Yaw += static_cast<float>(Direction) * 90;
 
