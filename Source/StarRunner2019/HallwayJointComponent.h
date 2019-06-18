@@ -18,17 +18,17 @@ public:
     UHallwayJointComponent();
 
 	UFUNCTION()
-	UBoxComponent* GetHallwaySpawnManagerBox();
+	UBoxComponent* GetSpawnTriggerBox();
 
 	UFUNCTION()
-	UBoxComponent* GetHallwayGameOverBox();
+	UBoxComponent* GetKillTriggerBox();
 
 private:
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"), BlueprintReadWrite)
-	UBoxComponent* hallwaySpawnManagerBox;
+	UBoxComponent* SpawnTriggerBox;
 
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"), BlueprintReadWrite)
-	UBoxComponent* hallwayGameOverBox;
+	UBoxComponent* KillTriggerBox;
 
-	UBoxComponent* AttachChildComponent(FName ChildComponentName, FTransform ChildComponentTransform);
+	UBoxComponent* AttachTriggerBox(FName ChildComponentName, FTransform ChildComponentTransform);
 };

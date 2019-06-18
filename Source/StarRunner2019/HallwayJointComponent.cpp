@@ -1,42 +1,32 @@
 // Copyright 2019 Dulce Studios. All Rights Reserved.
 
 #include "HallwayJointComponent.h"
-#include "Kismet/KismetSystemLibrary.h"
+#include "Math/BoxSphereBounds.h"
 #include "UObject/ConstructorHelpers.h"
 
 UHallwayJointComponent::UHallwayJointComponent()
 {
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(
 		TEXT("StaticMesh'/Game/Geometry/Meshes/hallwayjoint.hallwayjoint'"));
-	UStaticMesh* staticMesh = MeshAsset.Object;
-	this->SetStaticMesh(staticMesh);
+	UStaticMesh* StaticMesh = MeshAsset.Object;
+	this->SetStaticMesh(StaticMesh);
 
-	FVector hallwayJointComponentOrigin;
-	FVector hallwayJointComponentBoxExtent;
-	float hallwayJointComponentSphereRadius;
+	const float TriggerBoxScale = 2.0f * (this->Bounds.SphereRadius / this->Bounds.BoxExtent.X);
 
-	UKismetSystemLibrary::GetComponentBounds(
-		this,
-		hallwayJointComponentOrigin, // outargs
-		hallwayJointComponentBoxExtent, // outargs
-		hallwayJointComponentSphereRadius); // outargs
+	const FTransform SpawnTriggerBoxTransform(FRotator(0), FVector(0), FVector(TriggerBoxScale));
+	this->SpawnTriggerBox = this->AttachTriggerBox(TEXT("SpawnTriggerBox"), SpawnTriggerBoxTransform);
 
-	float hallwayJointComponentScale = 2.0f * (hallwayJointComponentSphereRadius / hallwayJointComponentBoxExtent.X);
-
-	FTransform hallwaySpawnManagerBoxTransform(FRotator(0), 
-		hallwayJointComponentOrigin, // translation is about the origin of this Hallway Joint Component
-		FVector(hallwayJointComponentScale));
-	FName hallwaySpawnManagerBoxName = TEXT("HallwaySpawnManagerBox");
-	this->hallwaySpawnManagerBox = AttachChildComponent(hallwaySpawnManagerBoxName, hallwaySpawnManagerBoxTransform);
-
-	FTransform hallwayGameOverBoxTransform(FRotator(0), 
-		FVector(hallwayJointComponentBoxExtent.X, 0, hallwayJointComponentBoxExtent.Z), // translation is about the farthest wrapping box face
-		FVector(0.75, hallwayJointComponentScale, hallwayJointComponentScale));
-	FName hallwayGameOverBoxName = TEXT("HallwayGameOverBox");
-	this->hallwayGameOverBox = AttachChildComponent(hallwayGameOverBoxName, hallwayGameOverBoxTransform);
+	//that is, nest into the wall
+	const FVector KillTriggerBoxTranslation(this->Bounds.BoxExtent.X, 0, this->Bounds.BoxExtent.Z);
+	//flatten to allow leeway to turn
+	const FVector KillTriggerBoxScale(0.75, TriggerBoxScale, TriggerBoxScale);
+	FTransform KillTriggerBoxTransform(FRotator(0), 
+		KillTriggerBoxTranslation,
+		KillTriggerBoxScale);
+	this->KillTriggerBox = this->AttachTriggerBox(TEXT("KillTriggerBox"), KillTriggerBoxTransform);
 }
 
-UBoxComponent* UHallwayJointComponent::AttachChildComponent(FName ChildComponentName, FTransform ChildComponentTransform)
+UBoxComponent* UHallwayJointComponent::AttachTriggerBox(FName ChildComponentName, FTransform ChildComponentTransform)
 {
 	UBoxComponent* ChildComponent = this->CreateDefaultSubobject<UBoxComponent>(ChildComponentName);
 	ChildComponent->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
@@ -45,12 +35,12 @@ UBoxComponent* UHallwayJointComponent::AttachChildComponent(FName ChildComponent
 	return ChildComponent;
 }
 
-UBoxComponent* UHallwayJointComponent::GetHallwaySpawnManagerBox()
+UBoxComponent* UHallwayJointComponent::GetSpawnTriggerBox()
 {
-	return this->hallwaySpawnManagerBox;
+	return this->SpawnTriggerBox;
 }
 
-UBoxComponent* UHallwayJointComponent::GetHallwayGameOverBox()
+UBoxComponent* UHallwayJointComponent::GetKillTriggerBox()
 {
-	return this->hallwayGameOverBox;
+	return this->KillTriggerBox;
 }

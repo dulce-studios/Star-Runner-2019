@@ -27,7 +27,11 @@ public:
 	void ShowPauseMenu();
 	void ClosePauseMenu();
 	void ShowGameOverMenu();
+
+	UFUNCTION()
 	void RestartGame();
+
+	UFUNCTION()
 	void QuitGame();
 
 	void SetGameOverHallwaysPassedText(unsigned int hallwaysPassedCount);
@@ -36,24 +40,14 @@ public:
 	template <typename T>
 	void FormatTextBlock(UTextBlock* textBlock, T value);
 
-	FText ConvertFloatSecondsToText(float seconds);
+	FText ConvertSecondsToText(float seconds);
 
 	UFUNCTION()
 	void PauseMenuContinueClicked();
 
-	UFUNCTION()
-	void PauseMenuRestartClicked();
-
-	UFUNCTION()
-	void PauseMenuQuitClicked();
-
-	UFUNCTION()
-	void GameOverRestartClicked();
-
-	UFUNCTION()
-	void GameOverQuitClicked();
-
 private:
+	void ShowMenu(UUserWidget* Widget);
+
 	UPROPERTY()
 	UStarRunner2019Widget* StarRunnerWidget;
 

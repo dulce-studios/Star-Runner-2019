@@ -15,7 +15,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/InputSettings.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetSystemLibrary.h"
 #include "Math/NumericLimits.h"
 #include "Math/UnrealMathUtility.h"
 
@@ -102,16 +101,12 @@ void AStarRunner2019Character::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AStarRunner2019Character::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AStarRunner2019Character::MoveRight);
 
-	FInputActionBinding& toggle = PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &AStarRunner2019Character::TogglePaused);
-	toggle.bExecuteWhenPaused = true; // catches input when paused
-
-	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
-	// "turn" handles devices that provide an absolute delta, such as a mouse.
-	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	//PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	//PlayerInputComponent->BindAxis("TurnRate", this, &AStarRunner2019Character::TurnAtRate);
-	//PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	//PlayerInputComponent->BindAxis("LookUpRate", this, &AStarRunner2019Character::LookUpAtRate);
+	FInputActionBinding& Toggle = PlayerInputComponent->BindAction(
+		"Pause",
+		IE_Pressed,
+		this,
+		&AStarRunner2019Character::TogglePaused);
+	Toggle.bExecuteWhenPaused = true; // catches input when paused
 
 	PlayerInputComponent->BindAction("TurnLeft", IE_Pressed, this, &AStarRunner2019Character::TurnLeft);
 	PlayerInputComponent->BindAction("TurnLeft", IE_Released, this, &AStarRunner2019Character::TurnLeft);
@@ -177,20 +172,6 @@ void AStarRunner2019Character::MoveRight(float Value)
 	}
 }
 
-void AStarRunner2019Character::TurnAtRate(float Rate)
-{
-	// calculate delta for this frame from the rate information
-	const float SecondsPerFrame = this->GetWorld()->GetDeltaSeconds();
-	this->AddControllerYawInput(Rate * this->BaseTurnRate * SecondsPerFrame);
-}
-
-void AStarRunner2019Character::LookUpAtRate(float Rate)
-{
-	// calculate delta for this frame from the rate information
-	const float SecondsPerFrame = this->GetWorld()->GetDeltaSeconds();
-	this->AddControllerPitchInput(Rate * this->BaseLookUpRate * SecondsPerFrame);
-}
-
 void AStarRunner2019Character::SpeedUp()
 {
 	const bool bAtSpeedStep = this->HallwaysPassedCount == this->NextSpeedupThreshold;
@@ -209,18 +190,19 @@ void AStarRunner2019Character::SpeedUp()
 }
 
 void AStarRunner2019Character::OnOverlapBegin(
-	UPrimitiveComponent* OverlapComponent,
+	UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
+	UPrimitiveComponent* OtherComponent,
 	int32 OtherBodyIndex,
 	bool bFromSweep,
 	const FHitResult& SweepResult)
 {
+
 	if (OtherActor->IsA(AHallwayActor::StaticClass())) {
 		auto* HallwayActor = Cast<AHallwayActor>(OtherActor);
-		auto* HallwayJointComponent = HallwayActor->GetHallwayJointComponent();
+		UHallwayJointComponent* HallwayJointComponent = HallwayActor->GetHallwayJointComponent();
 
-		if (OtherComp == HallwayJointComponent->GetHallwayGameOverBox()) {
+		if (OtherComponent == HallwayJointComponent->GetKillTriggerBox()) {
 			this->PlayerHUD->SetGameOverHallwaysPassedText(this->HallwaysPassedCount);
 			this->PlayerHUD->SetGameOverTimeElapsedText(this->GameTime);
 			this->PlayerHUD->ShowGameOverMenu();
@@ -238,9 +220,9 @@ void AStarRunner2019Character::OnOverlapEnd(
 {
 	if (OtherActor->IsA(AHallwayActor::StaticClass())) {
 		auto* HallwayActor = Cast<AHallwayActor>(OtherActor);
-		auto* HallwayJointComponent = HallwayActor->GetHallwayJointComponent();
+		UHallwayJointComponent* HallwayJointComponent = HallwayActor->GetHallwayJointComponent();
 
-		if (OtherComp == HallwayJointComponent->GetHallwaySpawnManagerBox()) {
+		if (OtherComp == HallwayJointComponent->GetSpawnTriggerBox()) {
 			++this->HallwaysPassedCount;
 			this->SpeedUp();
 		}
