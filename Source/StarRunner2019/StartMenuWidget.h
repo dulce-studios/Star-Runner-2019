@@ -18,5 +18,8 @@ public:
 	UButton* StartGameButton;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UButton* CreditsButton;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* ExitGameButton;
 };
