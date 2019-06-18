@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CreditsWidget.h"
 #include "StartMenuWidget.h"
 #include "GameFramework/HUD.h"
 #include "StartMenuHUD.generated.h"
@@ -22,9 +23,18 @@ public:
 	void StartButtonClicked();
 
 	UFUNCTION()
+	void CreditsButtonClicked();
+
+	UFUNCTION()
 	void ExitButtonClicked();
+
+	UFUNCTION()
+	void BackButtonClicked();
 
 private:
 	UPROPERTY()
 	UStartMenuWidget* StartMenu;
+
+	UPROPERTY()
+	UCreditsWidget* Credits;
 };
