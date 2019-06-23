@@ -6,3 +6,6 @@ Working on this with the wonderful [Lawrence Niu](https://github.com/Lancewiu).
 Original game proposal (made with Unity): https://devpost.com/software/star-runner
 
 
+Some gameplay:
+
+![](gameplay.gif)
