@@ -57,6 +57,5 @@ private:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
 	
-	AHallwayActor* SpawnHallFromYawAndOffset(
-		float yawDegrees);
+	AHallwayActor* SpawnHallway(float initialRelativeYaw);
 };
